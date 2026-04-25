@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "proactbench"
+version = "0.1.0"
+description = "ProactBench: measuring conversational proactivity in multi-turn LLM dialogues."
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [{name = "Anonymous"}]
+dependencies = [
+    "pydantic>=2.0",
+    "tenacity>=8.0",
+    "tqdm>=4.60",
+    "openai>=1.50",
+    "google-genai>=0.3",
+    "anthropic>=0.30",
+    "datasets>=3.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+
+[tool.setuptools.packages.find]
+include = ["proactbench*"]
