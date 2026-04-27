@@ -68,6 +68,45 @@ def _is_openai_reasoning(model: str) -> bool:
     return any(model.startswith(p) for p in _OPENAI_REASONING_PREFIXES)
 
 
+def _is_validation_or_schema_error(exc: BaseException) -> bool:
+    name = type(exc).__name__
+    if name in ("ValidationError", "LengthFinishReasonError", "ContentFilterFinishReasonError"):
+        return True
+    msg = str(exc).lower()
+    return "validation error" in msg or "should be a valid" in msg or "model_validate" in msg
+
+
+def _coerce_strings_to_dicts(obj):
+    """Recursively replace string values that look like JSON objects with the
+    decoded dict. Some OpenAI-compatible providers (e.g. Kimi via OpenRouter)
+    return nested fields as JSON-encoded strings instead of nested objects."""
+    import json as _json
+    if isinstance(obj, dict):
+        return {k: _coerce_strings_to_dicts(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_coerce_strings_to_dicts(v) for v in obj]
+    if isinstance(obj, str):
+        s = obj.strip()
+        if s.startswith("{") and s.endswith("}"):
+            try:
+                return _coerce_strings_to_dicts(_json.loads(s))
+            except _json.JSONDecodeError:
+                return obj
+    return obj
+
+
+def _tolerant_pydantic_parse(text: str, response_format: Type[BaseModel]):
+    import json as _json
+    s = (text or "").strip()
+    if s.startswith("```"):
+        s = s.strip("`").strip()
+        if s.lower().startswith("json"):
+            s = s[4:].strip()
+    raw = _json.loads(s)
+    fixed = _coerce_strings_to_dicts(raw)
+    return response_format.model_validate(fixed)
+
+
 class OpenAIClient:
     """Wrapper around the OpenAI Python SDK (also works with any
     OpenAI-compatible endpoint via ``base_url``)."""
@@ -138,18 +177,37 @@ class OpenAIClient:
                         response_format: Type[T], system: Optional[str] = None,
                         return_usage: bool = False, **gen) -> Any:
         kwargs = self._build_kwargs(model, gen)
+        formatted = self._format_messages(messages, system)
         try:
             resp = self.client.beta.chat.completions.parse(
                 model=model,
-                messages=self._format_messages(messages, system),
+                messages=formatted,
                 response_format=response_format,
                 **kwargs,
             )
             parsed = resp.choices[0].message.parsed
             return (parsed, self._usage(resp)) if return_usage else parsed
-        except Exception as e:
-            print(f"[OpenAIClient.chat_structured] retry after error: {e}", flush=True)
-            raise
+        except Exception as parse_err:
+            if not _is_validation_or_schema_error(parse_err):
+                print(f"[OpenAIClient.chat_structured] retry after error: {parse_err}", flush=True)
+                raise
+            # Fallback for OpenAI-compatible providers (Kimi/DeepSeek via OpenRouter)
+            # that return nested fields as JSON-encoded strings instead of dicts.
+            print(f"[OpenAIClient.chat_structured] strict parse failed, "
+                  f"falling back to json_object: {parse_err}", flush=True)
+            try:
+                resp = self.client.chat.completions.create(
+                    model=model,
+                    messages=formatted,
+                    response_format={"type": "json_object"},
+                    **kwargs,
+                )
+            except Exception as e:
+                print(f"[OpenAIClient.chat_structured] fallback failed: {e}", flush=True)
+                raise
+            parsed = _tolerant_pydantic_parse(resp.choices[0].message.content,
+                                              response_format)
+            return (parsed, self._usage(resp)) if return_usage else parsed
 
 
 # ── Gemini ────────────────────────────────────────────────────────────────────
@@ -231,9 +289,21 @@ _CLAUDE_THINKING_PREFIXES = (
     "claude-opus-4", "claude-sonnet-4", "claude-haiku-4", "claude-3-7-sonnet",
 )
 
+# Claude models that have deprecated all sampling parameters
+# (``temperature``, ``top_p``, ``top_k``). Passing any of them returns 400.
+# Affects Claude Opus/Sonnet/Haiku 4.7+.
+_CLAUDE_NO_SAMPLING_PARAMS_PREFIXES = (
+    "claude-opus-4-7", "claude-sonnet-4-7", "claude-haiku-4-7",
+)
+
 
 def _claude_supports_thinking(model: str) -> bool:
     return any(model.startswith(p) for p in _CLAUDE_THINKING_PREFIXES)
+
+
+def _claude_accepts_sampling_params(model: str) -> bool:
+    """Returns False for models that deprecated temperature/top_p/top_k."""
+    return not any(model.startswith(p) for p in _CLAUDE_NO_SAMPLING_PARAMS_PREFIXES)
 
 
 class AnthropicClient:
@@ -250,19 +320,26 @@ class AnthropicClient:
 
     def _build_kwargs(self, model: str, gen: dict) -> dict:
         max_new = gen.get("max_new_tokens", 8192)
-        kwargs: dict = {
-            "max_tokens": max_new,
-            "temperature": gen.get("temperature", 0.7),
-        }
-        top_p = gen.get("top_p")
-        if top_p is not None:
-            kwargs["top_p"] = top_p
+        kwargs: dict = {"max_tokens": max_new}
+        accepts_sampling = _claude_accepts_sampling_params(model)
+        if accepts_sampling:
+            kwargs["temperature"] = gen.get("temperature", 0.7)
+            top_p = gen.get("top_p")
+            if top_p is not None:
+                kwargs["top_p"] = top_p
+            top_k = gen.get("top_k")
+            if top_k is not None:
+                kwargs["top_k"] = top_k
         if gen.get("enable_thinking") and _claude_supports_thinking(model):
             budget = gen.get("thinking_budget") or max(max_new // 2, 1024)
             budget = min(budget, max(max_new - 1, 1))
             kwargs["thinking"] = {"type": "enabled", "budget_tokens": budget}
-            kwargs["temperature"] = 1.0
-            kwargs.pop("top_p", None)
+            # Extended thinking requires temperature=1.0 and disallows top_p/top_k.
+            # Claude 4.7+ deprecated all sampling params; for those, pass none.
+            if accepts_sampling:
+                kwargs["temperature"] = 1.0
+                kwargs.pop("top_p", None)
+                kwargs.pop("top_k", None)
         return kwargs
 
     @staticmethod
@@ -345,6 +422,34 @@ class AnthropicClient:
 
 # ── Factory ───────────────────────────────────────────────────────────────────
 
+# Third-party OpenAI-compatible providers. Map model-name prefix → base URL +
+# env var holding the API key. Add a new provider here once and ``make_client``
+# picks it up automatically.
+_OAI_COMPAT_PROVIDERS: tuple[tuple[str, str, str], ...] = (
+    ("kimi",     "https://api.moonshot.ai/v1",   "MOONSHOT_API_KEY"),
+    ("moonshot", "https://api.moonshot.ai/v1",   "MOONSHOT_API_KEY"),
+    ("deepseek", "https://api.deepseek.com/v1",  "DEEPSEEK_API_KEY"),
+)
+
+# Map well-known OpenAI-compatible base URLs → env var holding the key.
+# Used when the caller passes ``base_url=...`` directly (e.g. OpenRouter).
+_BASE_URL_KEY_VARS: dict[str, str] = {
+    "openrouter.ai": "OPENROUTER_API_KEY",
+    "api.moonshot.ai": "MOONSHOT_API_KEY",
+    "api.deepseek.com": "DEEPSEEK_API_KEY",
+    "api.together.xyz": "TOGETHER_API_KEY",
+    "api.fireworks.ai": "FIREWORKS_API_KEY",
+}
+
+
+def _api_key_for_base_url(base_url: str) -> str:
+    """Pick the right env var for a given base URL. Falls back to OPENAI_API_KEY."""
+    for host, key_var in _BASE_URL_KEY_VARS.items():
+        if host in base_url:
+            return os.environ.get(key_var, "EMPTY")
+    return os.environ.get("OPENAI_API_KEY", "EMPTY")
+
+
 def make_client(model: str, base_url: Optional[str] = None, **kwargs):
     """Return the right client for ``model``.
 
@@ -353,13 +458,18 @@ def make_client(model: str, base_url: Optional[str] = None, **kwargs):
       * ``base_url`` provided → OpenAI-compatible endpoint
       * model starts with ``claude-`` → AnthropicClient
       * model contains ``gemini`` → GeminiClient
+      * model matches a known third-party prefix (``kimi-``, ``deepseek-``, …) →
+        OpenAIClient with that provider's base URL and key
       * everything else → OpenAIClient (works for ``gpt-*``, ``o1*`` … and any
         OpenAI-compatible model if the env has OPENAI_API_KEY)
     """
     if base_url is not None:
-        return OpenAIClient(api_key=os.environ.get("OPENAI_API_KEY", "EMPTY"), base_url=base_url)
+        return OpenAIClient(api_key=_api_key_for_base_url(base_url), base_url=base_url)
     if model.startswith("claude-"):
         return AnthropicClient(**kwargs)
     if "gemini" in model:
         return GeminiClient(**kwargs)
+    for prefix, provider_url, key_var in _OAI_COMPAT_PROVIDERS:
+        if model.startswith(prefix):
+            return OpenAIClient(api_key=os.environ.get(key_var, "EMPTY"), base_url=provider_url)
     return OpenAIClient(**kwargs)
