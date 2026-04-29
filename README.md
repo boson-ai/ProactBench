@@ -204,7 +204,16 @@ Pydantic schemas for all of the above live in [`proactbench/types.py`](proactben
 
 ## Citation
 
+```bibtex
+@inproceedings{anonymous2026proactbench,
+  title={ProactBench: What the User Didn't Ask},
+  author={Anonymous},
+  booktitle={Under review at NeurIPS 2026 (Datasets and Benchmarks)},
+  year={2026}
+}
+```
 
+(BibTeX will be updated with author/venue details on acceptance.)
 
 ## License
 
