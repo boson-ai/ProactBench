@@ -4,6 +4,21 @@ Every JSONL artifact produced by ProactBench is one row per line with a
 stable schema. Pydantic models for every structure live in
 [`proactbench/types.py`](../proactbench/types.py).
 
+The released benchmark corpus lives in [`dataset/`](../dataset/). Six files:
+
+| File | Stage | Rows |
+|---|---|---|
+| `tasks.jsonl` | 1 — scenario synthesis | 50 (one per persona) |
+| `blueprints.jsonl` | 2 — turn-by-turn plans | 250 |
+| `validation_results.jsonl` | 3 — independent-judge audit decisions | 250 |
+| `validated_blueprints.jsonl` | 3 — audit-passing subset | 210 |
+| `selected_tasks.jsonl` | curated subset of `tasks.jsonl` | 50 |
+| `final_dialogues.jsonl` | 4 — main benchmark corpus | **198** |
+
+The dataset is also indexed by [`dataset/metadata.json`](../dataset/metadata.json)
+in the [Croissant 1.0](http://mlcommons.org/croissant/) schema for
+machine-readable discovery, and described in [`dataset/DATASHEET.md`](../dataset/DATASHEET.md).
+
 ## `tasks.jsonl` — Stage 1 output
 
 Each row is one persona; its `<category>_scenarios` field holds the list of
@@ -68,13 +83,30 @@ Each scenario:
 `validated_blueprints.jsonl` is the subset whose `audit_decision == "PASS"`
 in the matching `validation_results.jsonl`.
 
-## `online_eval.jsonl` / `offline_eval.jsonl` — evaluation outputs
+## `validation_results.jsonl` — Stage 3 audit decisions
 
 ```json
 {
   "blueprint_id": "BP_PROFESSIONAL_01_VQ",
+  "audit_decision": "PASS",
+  "audit_judge_model": "gemini-2.5-pro",
+  "blank_slate_integrity": {"score": "PASS", "rationale": "..."},
+  "logical_necessity":     {"score": "PASS", "rationale": "..."},
+  "persona_alignment":     {"score": "PASS", "rationale": "..."},
+  "rubric_clarity":        {"score": "PASS", "rationale": "..."}
+}
+```
+
+## `final_dialogues.jsonl` — main benchmark corpus
+
+The released benchmark. One row per curated dialogue (198 rows).
+
+```json
+{
+  "uuid": "531a542f-...",
+  "unique_id_eval": "BP_PROFESSIONAL_01_VQ__style9__531a542f-...",
+  "blueprint_id": "BP_PROFESSIONAL_01_VQ",
   "scenario_id": "PROFESSIONAL_01",
-  "uuid": "...",
   "category_key": "professional_persona",
   "style_combination_index": 9,
   "evaluated_model": "gemini-2.5-pro",
@@ -110,10 +142,30 @@ in the matching `validation_results.jsonl`.
 }
 ```
 
-Offline records use the same top-level schema but with two differences:
+### Field reference (final_dialogues.jsonl)
 
-* `token_usage` has only `assistant` and `judge` (no `planner` / `user_agent`)
-* each `turn_records` entry also carries `original_assistant_response`, the
+| Field | Type | Description |
+|---|---|---|
+| `uuid` | string | Original generation UUID. **Note:** not unique across the corpus on its own — use `unique_id_eval` as the primary key. |
+| `unique_id_eval` | string | Composite primary key formatted as `{blueprint_id}__style{style_combination_index}__{uuid}`. **Guaranteed unique across the corpus**; use this when joining with offline-eval outputs or per-trigger analyses. |
+| `blueprint_id` | string | Source blueprint identifier (e.g. `BP_PROFESSIONAL_01_EVA`). |
+| `scenario_id` | string | Source scenario identifier (e.g. `PROFESSIONAL_01`). |
+| `category_key` | enum | One of `professional_persona`, `sports_persona`, `arts_persona`, `travel_persona`, `culinary_persona`. |
+| `style_combination_index` | int | 1–24, indexing the CSI factorial style. See [`proactbench/styles.py`](../proactbench/styles.py). |
+| `evaluated_model` | string | Model whose responses populated the dialogue at curation time (Gemini-2.5-Pro for the released corpus). |
+| `num_turns_completed` | int | 5–10. Min enforced; max bounded by the planner's stop condition. |
+| `trigger_stats` | object | Per-trigger-type tally of PASS / PARTIAL / FAIL / SKIPPED. |
+| `trigger_points` | array | One entry per trigger turn: rubric (pass/partial/fail criteria), evaluation result (score, rationale, verbatim evidence quote). |
+| `turn_records` | array | Per-turn record: planner state, user message, assistant response. |
+| `token_usage` | object | Per-agent prompt/completion token counts. |
+
+## Online vs offline evaluation outputs
+
+`online_eval.jsonl` and `offline_eval.jsonl` use the same top-level schema as
+`final_dialogues.jsonl` but with two differences in the offline form:
+
+* `token_usage` has only `assistant` and `judge` (no `planner` / `user_agent`).
+* Each `turn_records` entry also carries `original_assistant_response`, the
   response from the seed curation model, so you can diff what the new model
   said vs. what the dialogue was originally curated against.
 

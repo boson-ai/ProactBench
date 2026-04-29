@@ -10,6 +10,40 @@ three-agent architecture (Planner, User Agent, Evaluated Model) whose
 information asymmetries defend against rubric leakage, post-hoc
 rationalization, style-confounded scoring, and information dumps.
 
+## Dataset
+
+The released benchmark lives in [`dataset/`](dataset/):
+
+| File | Rows | Description |
+|---|---|---|
+| `final_dialogues.jsonl` | 198 | **Main benchmark corpus** — 198 curated dialogues, 624 trigger points (201 Emergent / 232 Critical / 191 Recovery), each scored at curation time. |
+| `validated_blueprints.jsonl` | 210 | Audit-passing blueprints (input to the dialogue rollout). |
+| `blueprints.jsonl` | 250 | All generated blueprints (pre-audit). |
+| `validation_results.jsonl` | 250 | Independent-judge audit decisions. |
+| `tasks.jsonl` | 50 | Per-persona scenarios (Stage 1 output). |
+| `selected_tasks.jsonl` | 50 | Curated subset of `tasks.jsonl`. |
+
+The dataset ships with [Croissant 1.0](http://mlcommons.org/croissant/)
+metadata at [`dataset/metadata.json`](dataset/metadata.json) and a full
+datasheet at [`dataset/DATASHEET.md`](dataset/DATASHEET.md). The schema for
+every file is documented in
+[`docs/DATA_SCHEMAS.md`](docs/DATA_SCHEMAS.md), with `proactbench/types.py`
+as the canonical Pydantic source.
+
+The benchmark is released under the MIT License; persona-derived content
+inherits the upstream Nemotron-Personas-USA CC-BY-4.0 license. After
+acceptance, the dataset will additionally be hosted at a long-term artifact
+registry (HuggingFace Datasets) for discoverability.
+
+```python
+import json
+from pathlib import Path
+
+dialogues = [json.loads(l) for l in
+             Path("dataset/final_dialogues.jsonl").read_text().splitlines() if l.strip()]
+print(len(dialogues), "dialogues")  # 198
+```
+
 ## Install
 
 ```bash
@@ -80,8 +114,16 @@ blueprints → validated_blueprints → dialogues → offline scores.
 
 ### 1. Synthesis
 
+> **Note on model roles.** Throughout the paper's main configuration, GPT-5.4
+> serves as the **Planner**, **User Agent**, and **offline judge**. The
+> *evaluated* model — the one whose proactivity is being scored — is specified
+> separately via `--eval-model` in the offline-evaluation command (the paper
+> reports 16 evaluated models, with GPT-5.5 leading). Don't confuse the
+> orchestration model with the evaluated model.
+
 ```bash
-# Stage 1: scenarios (hidden goal + anchors + ideal trajectory)
+# Stage 1: scenarios (hidden goal + anchors + ideal trajectory).
+# `--model` here is the Planner.
 python -m proactbench.synthesis.generate_tasks \
   --num-personas 50 \
   --output-path data/tasks.jsonl \
@@ -132,9 +174,9 @@ from proactbench.evaluation import run_offline_eval
 
 run_offline_eval(
     results_path=Path("output/online_eval.jsonl"),
-    output_path=Path("output/offline_gemini_as_eval.jsonl"),
-    eval_model="gemini-2.5-pro",  # new model under evaluation
-    judge_model="gpt-5.4",
+    output_path=Path("output/offline_gpt55_eval.jsonl"),
+    eval_model="gpt-5.5",          # the model under evaluation (the paper's headline)
+    judge_model="gpt-5.4",         # judge stays GPT-5.4 in the main configuration
     num_threads=4,
 )
 ```
