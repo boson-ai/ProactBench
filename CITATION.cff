@@ -3,7 +3,7 @@ message: "If you use ProactBench, please cite the work below."
 title: "ProactBench: What the User Didn't Ask"
 version: "1.0.0"
 date-released: "2026-04-28"
-license: MIT
+license: Apache-2.0
 type: dataset
 authors:
   - name: "Anonymous (under double-blind review at NeurIPS 2026)"

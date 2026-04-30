@@ -30,8 +30,8 @@ every file is documented in
 [`docs/DATA_SCHEMAS.md`](docs/DATA_SCHEMAS.md), with `proactbench/types.py`
 as the canonical Pydantic source.
 
-The benchmark is released under the MIT License; persona-derived content
-inherits the upstream Nemotron-Personas-USA CC-BY-4.0 license. After
+The benchmark is released under the Apache 2.0 License; persona-derived
+content inherits the upstream Nemotron-Personas-USA CC-BY-4.0 license. After
 acceptance, the dataset will additionally be hosted at a long-term artifact
 registry (HuggingFace Datasets) for discoverability.
 
@@ -217,4 +217,4 @@ Pydantic schemas for all of the above live in [`proactbench/types.py`](proactben
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+Apache 2.0 — see [LICENSE](LICENSE). Persona-derived content inherits the upstream Nemotron-Personas-USA CC-BY-4.0 license.

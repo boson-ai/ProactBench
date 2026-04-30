@@ -167,7 +167,7 @@ alignment.
 
 **Will the dataset be distributed to third parties outside of the entity on
 behalf of which the dataset was created?**
-Yes — the dataset is released publicly under the MIT license alongside the
+Yes — the dataset is released publicly under the Apache-2.0 license alongside the
 paper.
 
 **How will the dataset be distributed?**
@@ -179,12 +179,12 @@ review period, the repo (this archive) is the canonical anonymous host.
 
 **When will the dataset be distributed?**
 The repository is available now. The HuggingFace mirror will be created at
-camera-ready time (post-acceptance), with the same MIT license.
+camera-ready time (post-acceptance), with the same Apache-2.0 license.
 
 **Will the dataset be distributed under a copyright or other intellectual
 property (IP) license?**
-MIT License (see [`LICENSE`](../LICENSE)). The persona-derived content
-inherits the CC-BY-4.0 license of the upstream Nemotron-Personas-USA
+Apache 2.0 License (see [`LICENSE`](../LICENSE)). The persona-derived
+content inherits the CC-BY-4.0 license of the upstream Nemotron-Personas-USA
 dataset; persona attribution is preserved.
 
 **Have any third parties imposed IP-based or other restrictions on the data
