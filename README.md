@@ -17,11 +17,11 @@ The released benchmark lives in [`dataset/`](dataset/):
 | File | Rows | Description |
 |---|---|---|
 | `final_dialogues.jsonl` | 198 | **Main benchmark corpus** — 198 curated dialogues, 624 trigger points (201 Emergent / 232 Critical / 191 Recovery), each scored at curation time. |
-| `validated_blueprints.jsonl` | 210 | Audit-passing blueprints (input to the dialogue rollout). |
+| `validated_blueprints.jsonl` | 207 | Audit-passing blueprints rolled forward to the dialogue stage. (210 of 250 received a PASS audit decision; 3 were dropped at the validated-blueprint write step due to post-audit format-validation failures.) |
 | `blueprints.jsonl` | 250 | All generated blueprints (pre-audit). |
 | `validation_results.jsonl` | 250 | Independent-judge audit decisions. |
 | `tasks.jsonl` | 50 | Per-persona scenarios (Stage 1 output). |
-| `selected_tasks.jsonl` | 50 | Curated subset of `tasks.jsonl`. |
+| `selected_tasks.jsonl` | 19 | Curated subset of `tasks.jsonl` — 19 personas containing 25 scenarios that fed Stage 2 blueprint generation. |
 | [`human_eval/`](dataset/human_eval/) | 18 raters / 275 ratings / 60 items | Human-validation study results (Prolific, pseudonymized). Per-annotator rating files, the 60-item stratified subsample, annotator briefing, instructions, and the analysis script that reproduces Krippendorff's $\alpha$ and Cohen's $\kappa_{\text{quad}}$ from the paper. |
 
 The dataset ships with [Croissant 1.0](http://mlcommons.org/croissant/)
@@ -36,6 +36,8 @@ content inherits the upstream Nemotron-Personas-USA CC-BY-4.0 license. After
 acceptance, the dataset will additionally be hosted at a long-term artifact
 registry (HuggingFace Datasets) for discoverability.
 
+Load with plain JSONL parsing:
+
 ```python
 import json
 from pathlib import Path
@@ -43,6 +45,14 @@ from pathlib import Path
 dialogues = [json.loads(l) for l in
              Path("dataset/final_dialogues.jsonl").read_text().splitlines() if l.strip()]
 print(len(dialogues), "dialogues")  # 198
+```
+
+Or via HuggingFace `datasets` (v3+, no custom loader script needed):
+
+```python
+from datasets import load_dataset
+ds = load_dataset("json", data_files="dataset/final_dialogues.jsonl", split="train")
+print(len(ds), "dialogues")  # 198
 ```
 
 ## Install
