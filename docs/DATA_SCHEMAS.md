@@ -174,3 +174,42 @@ The released benchmark. One row per curated dialogue (198 rows).
 Trigger scores are one of `PASS`, `PARTIAL`, `FAIL`, or `SKIPPED` (the last
 when the pipeline couldn't reach the trigger turn). Aggregation uses the
 convention `Pass=1.0`, `Partial=0.5`, `Fail=0.0` for the "weighted score".
+
+## Human-evaluation data (`dataset/human_eval/`)
+
+### `dataset/human_eval/results/A{NN}.jsonl`
+
+One file per pseudonymized annotator (`A01`–`A18`). Each line is one rating:
+
+| Field | Type | Description |
+|---|---|---|
+| `annotator_id` | string | Pseudonym (`A01`…`A18`); the underlying Prolific worker ID is not redistributed. |
+| `item_id` | string | Stable identifier for the rated trigger; matches `item_id` in `sample_items.json`. |
+| `score` | string | One of `Pass`, `Partial`, `Fail`. |
+| `rationale` | string | Annotator's free-text justification (mandatory). |
+| `confidence` | int | Self-reported 1–5 Likert. |
+| `time_spent_seconds` | float | Render → submit time for this item. |
+| `timestamp` | ISO 8601 | Annotator's local-time submission. |
+| `server_received_at` | ISO 8601 | UTC server-side receipt time. |
+
+### `dataset/human_eval/sample_items.json`
+
+A JSON array of 60 trigger points (the rated subsample). Each item:
+
+| Field | Type | Description |
+|---|---|---|
+| `item_id` | string | Primary key; matches `item_id` in `results/A*.jsonl`. |
+| `dialogue_id` | string | Source dialogue UUID from `final_dialogues.jsonl`. |
+| `trigger_type` | string | `EMERGENT` / `CRITICAL` / `RECOVERY`. |
+| `turn_index` | int | 1-indexed trigger turn within the dialogue. |
+| `evaluated_model` | string | Display name of the model whose response is being rated. |
+| `judge_score` | string | The GPT-5.4 offline-judge score (held out from the rating UI; used post-hoc for the human–judge comparison). |
+| `judge_rationale` | string | Judge's rationale (held out from rating UI). |
+| `judge_evidence` | string | Judge's pointed evidence quote (held out from rating UI). |
+| `persona_category` | string | `PROFESSIONAL` / `CULINARY` / `ARTS` / `TRAVEL` / `SPORTS`. |
+| `communication_style` | string | One of the 24 CSI styles. |
+| `dialogue_history` | list of `{role, content}` | Conversation up to and including the trigger user message. |
+| `user_message` | string | The trigger user message. |
+| `anchors_disclosed` | list of strings | Explicit list of facts disclosed up to the trigger. |
+| `model_response` | string | The assistant response under evaluation. |
+| `rubric` | object | `{type, pass_criteria, partial_criteria, fail_criteria}` — Planner-authored before the model spoke. |

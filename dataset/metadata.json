@@ -130,6 +130,51 @@
       "contentUrl": "selected_tasks.jsonl",
       "encodingFormat": "application/jsonl",
       "sha256": "see-release-tag"
+    },
+    {
+      "@type": "cr:FileSet",
+      "@id": "human_eval_results",
+      "name": "human_eval_results",
+      "description": "Per-annotator rating files from the Prolific human-validation study (18 pseudonymized raters, 275 total ratings on 60 stratified items). Each line is one rating with score, free-text rationale, confidence Likert, and timing.",
+      "encodingFormat": "application/jsonl",
+      "containedIn": {"@id": "human_eval"},
+      "includes": "human_eval/results/A*.jsonl"
+    },
+    {
+      "@type": "cr:FileObject",
+      "@id": "human_eval_sample_items",
+      "name": "human_eval/sample_items.json",
+      "description": "The 60 trigger points presented to annotators, with dialogue history, rubrics, evaluated-model responses, and the held-out judge scores for downstream comparison.",
+      "contentUrl": "human_eval/sample_items.json",
+      "encodingFormat": "application/json",
+      "sha256": "see-release-tag"
+    },
+    {
+      "@type": "cr:FileObject",
+      "@id": "human_eval_briefing",
+      "name": "human_eval/ANNOTATOR_BRIEFING.md",
+      "description": "Verbatim briefing document delivered to annotators (PASS/PARTIAL/FAIL definitions, exclusions, common-pitfalls list).",
+      "contentUrl": "human_eval/ANNOTATOR_BRIEFING.md",
+      "encodingFormat": "text/markdown",
+      "sha256": "see-release-tag"
+    },
+    {
+      "@type": "cr:FileObject",
+      "@id": "human_eval_instructions",
+      "name": "human_eval/INSTRUCTIONS_FOR_ANNOTATORS.md",
+      "description": "Procedural instructions for annotators (rating mechanics, interface walk-through).",
+      "contentUrl": "human_eval/INSTRUCTIONS_FOR_ANNOTATORS.md",
+      "encodingFormat": "text/markdown",
+      "sha256": "see-release-tag"
+    },
+    {
+      "@type": "cr:FileObject",
+      "@id": "human_eval_analysis_script",
+      "name": "human_eval/analyze_results.py",
+      "description": "Reproduces the headline statistics from the paper: Krippendorff's alpha per trigger type, Cohen's kappa_quad (consensus and per-rating), 3x3 confusion matrices, with bootstrap CIs.",
+      "contentUrl": "human_eval/analyze_results.py",
+      "encodingFormat": "text/x-python",
+      "sha256": "see-release-tag"
     }
   ],
   "recordSet": [
@@ -151,6 +196,22 @@
         {"@type": "cr:Field", "@id": "dialogues/trigger_points", "name": "trigger_points", "description": "Array of trigger-point records. Each carries the trigger turn index, the rubric (pass/partial/fail criteria), and the evaluation result (score, rationale, verbatim evidence quote).", "dataType": "sc:StructuredValue"},
         {"@type": "cr:Field", "@id": "dialogues/turn_records", "name": "turn_records", "description": "Array of turn records: planner state, user message, assistant response.", "dataType": "sc:StructuredValue"},
         {"@type": "cr:Field", "@id": "dialogues/token_usage", "name": "token_usage", "description": "Per-agent token usage (planner, user_agent, assistant).", "dataType": "sc:StructuredValue"}
+      ]
+    },
+    {
+      "@type": "cr:RecordSet",
+      "@id": "human_eval_ratings",
+      "name": "human_eval_ratings",
+      "description": "One record per human rating from the Prolific validation study (275 retained ratings across 18 pseudonymized annotators on 60 stratified trigger points).",
+      "field": [
+        {"@type": "cr:Field", "@id": "human_eval_ratings/annotator_id", "name": "annotator_id", "description": "Pseudonym (A01-A18); the underlying Prolific worker ID is held internally and not redistributed.", "dataType": "sc:Text"},
+        {"@type": "cr:Field", "@id": "human_eval_ratings/item_id", "name": "item_id", "description": "Stable identifier for the rated trigger; matches `item_id` in human_eval/sample_items.json.", "dataType": "sc:Text"},
+        {"@type": "cr:Field", "@id": "human_eval_ratings/score", "name": "score", "description": "Annotator's score: one of `Pass`, `Partial`, `Fail`.", "dataType": "sc:Text"},
+        {"@type": "cr:Field", "@id": "human_eval_ratings/rationale", "name": "rationale", "description": "Annotator's free-text justification (mandatory).", "dataType": "sc:Text"},
+        {"@type": "cr:Field", "@id": "human_eval_ratings/confidence", "name": "confidence", "description": "Self-reported 1-5 Likert confidence.", "dataType": "sc:Integer"},
+        {"@type": "cr:Field", "@id": "human_eval_ratings/time_spent_seconds", "name": "time_spent_seconds", "description": "Render-to-submit time for this item.", "dataType": "sc:Float"},
+        {"@type": "cr:Field", "@id": "human_eval_ratings/timestamp", "name": "timestamp", "description": "Annotator's local-time submission timestamp (ISO 8601).", "dataType": "sc:Text"},
+        {"@type": "cr:Field", "@id": "human_eval_ratings/server_received_at", "name": "server_received_at", "description": "UTC server-side receipt timestamp (ISO 8601).", "dataType": "sc:Text"}
       ]
     }
   ]

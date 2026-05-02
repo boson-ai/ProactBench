@@ -22,6 +22,7 @@ The released benchmark lives in [`dataset/`](dataset/):
 | `validation_results.jsonl` | 250 | Independent-judge audit decisions. |
 | `tasks.jsonl` | 50 | Per-persona scenarios (Stage 1 output). |
 | `selected_tasks.jsonl` | 50 | Curated subset of `tasks.jsonl`. |
+| [`human_eval/`](dataset/human_eval/) | 18 raters / 275 ratings / 60 items | Human-validation study results (Prolific, pseudonymized). Per-annotator rating files, the 60-item stratified subsample, annotator briefing, instructions, and the analysis script that reproduces Krippendorff's $\alpha$ and Cohen's $\kappa_{\text{quad}}$ from the paper. |
 
 The dataset ships with [Croissant 1.0](http://mlcommons.org/croissant/)
 metadata at [`dataset/metadata.json`](dataset/metadata.json) and a full

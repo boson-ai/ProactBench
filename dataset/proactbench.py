@@ -38,7 +38,7 @@ the Communication Styles Inventory (CSI).
 """
 
 _HOMEPAGE = "https://github.com/anonymous/ProactBench"
-_LICENSE = "MIT"
+_LICENSE = "Apache-2.0"  # persona-derived content inherits Nemotron-Personas-USA CC-BY-4.0
 
 
 class ProactBenchConfig(datasets.BuilderConfig):
