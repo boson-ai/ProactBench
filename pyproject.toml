@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "proactbench"
-version = "0.1.0"
+version = "1.0.0"
 description = "ProactBench: measuring conversational proactivity in multi-turn LLM dialogues."
 readme = "README.md"
 license = {text = "Apache-2.0"}
@@ -18,10 +18,13 @@ dependencies = [
     "google-genai>=0.3",
     "anthropic>=0.30",
     "datasets>=3.0",
+    "numpy>=1.24",
+    "pandas>=2.0",
 ]
 
 [project.optional-dependencies]
 dev = ["pytest>=7.0"]
+human-eval = ["numpy>=1.24", "pandas>=2.0"]
 
 [tool.setuptools.packages.find]
 include = ["proactbench*"]

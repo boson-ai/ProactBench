@@ -1,7 +1,7 @@
 """
 analyze_results.py — Post-study analysis.
 
-Reads results/annotator_*_results.jsonl, joins with sample_items.json,
+Reads results/A*.jsonl (one per pseudonymized annotator), joins with sample_items.json,
 and computes:
   - Coverage stats
   - Per-annotator stats (count, mean time, mean confidence)
@@ -58,7 +58,7 @@ BOOT_SEED = 2026
 def load_ratings():
     """Return list of dicts, one per human rating."""
     ratings = []
-    for p in sorted(RESULTS_DIR.glob("annotator_*_results.jsonl")):
+    for p in sorted(RESULTS_DIR.glob("A*.jsonl")):
         with open(p) as f:
             for line in f:
                 line = line.strip()
@@ -401,7 +401,7 @@ def main():
     p("Proactivity Bench — Human Annotation Analysis")
     p("=" * 70)
     p(f"Loaded {len(sample)} items from sample")
-    p(f"Loaded {len(ratings)} ratings from {len(list(RESULTS_DIR.glob('annotator_*_results.jsonl')))} annotator file(s)")
+    p(f"Loaded {len(ratings)} ratings from {len(list(RESULTS_DIR.glob('A*.jsonl')))} annotator file(s)")
     p("")
 
     # --- Coverage ---
