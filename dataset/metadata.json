@@ -175,6 +175,24 @@
       "contentUrl": "human_eval/analyze_results.py",
       "encodingFormat": "text/x-python",
       "sha256": "see-release-tag"
+    },
+    {
+      "@type": "cr:FileSet",
+      "@id": "eval_results",
+      "name": "eval_results",
+      "description": "Per-model offline-evaluation outputs: full assistant responses at each trigger turn, judge labels with rationale and evidence quotes, and original-curation responses for diff. One JSONL file per evaluated model (16 models, 198 dialogues each = 3168 dialogue-records). The raw inputs that feed every per-model number, ranking, and ablation in the paper.",
+      "encodingFormat": "application/jsonl",
+      "containedIn": {"@id": "eval"},
+      "includes": "eval/*_proactivity_bench_results.jsonl"
+    },
+    {
+      "@type": "cr:FileSet",
+      "@id": "eval_metrics",
+      "name": "eval_metrics",
+      "description": "Per-model aggregate metrics: weighted scores (Pass=1.0, Partial=0.5, Fail=0.0) and pass rates by trigger type. One JSON file per evaluated model.",
+      "encodingFormat": "application/json",
+      "containedIn": {"@id": "eval"},
+      "includes": "eval/*_proactivity_bench_metrics.json"
     }
   ],
   "recordSet": [
@@ -192,8 +210,7 @@
         {"@type": "cr:Field", "@id": "dialogues/style_combination_index", "name": "style_combination_index", "description": "Index into the 24-style CSI factorial (1-24). See `proactbench/styles.py`.", "dataType": "sc:Integer"},
         {"@type": "cr:Field", "@id": "dialogues/evaluated_model", "name": "evaluated_model", "description": "Identifier of the model whose responses populated the dialogue at curation time (Gemini-2.5-Pro for the released corpus).", "dataType": "sc:Text"},
         {"@type": "cr:Field", "@id": "dialogues/num_turns_completed", "name": "num_turns_completed", "description": "Number of turns reached before the dialogue terminated. Min 5, max 10.", "dataType": "sc:Integer"},
-        {"@type": "cr:Field", "@id": "dialogues/trigger_stats", "name": "trigger_stats", "description": "Per-trigger-type pass / partial / fail / skipped counts.", "dataType": "sc:StructuredValue"},
-        {"@type": "cr:Field", "@id": "dialogues/trigger_points", "name": "trigger_points", "description": "Array of trigger-point records. Each carries the trigger turn index, the rubric (pass/partial/fail criteria), and the evaluation result (score, rationale, verbatim evidence quote).", "dataType": "sc:StructuredValue"},
+        {"@type": "cr:Field", "@id": "dialogues/trigger_points", "name": "trigger_points", "description": "Array of trigger-point records. Each carries the trigger turn index and the rubric (pass/partial/fail criteria authored by the Planner before the model responded). No curation-time judge output is included in the released main corpus; per-model scored outputs (responses, scores, rationales, evidence quotes) live in dataset/eval/.", "dataType": "sc:StructuredValue"},
         {"@type": "cr:Field", "@id": "dialogues/turn_records", "name": "turn_records", "description": "Array of turn records: planner state, user message, assistant response.", "dataType": "sc:StructuredValue"},
         {"@type": "cr:Field", "@id": "dialogues/token_usage", "name": "token_usage", "description": "Per-agent token usage (planner, user_agent, assistant).", "dataType": "sc:StructuredValue"}
       ]
@@ -212,6 +229,27 @@
         {"@type": "cr:Field", "@id": "human_eval_ratings/time_spent_seconds", "name": "time_spent_seconds", "description": "Render-to-submit time for this item.", "dataType": "sc:Float"},
         {"@type": "cr:Field", "@id": "human_eval_ratings/timestamp", "name": "timestamp", "description": "Annotator's local-time submission timestamp (ISO 8601).", "dataType": "sc:Text"},
         {"@type": "cr:Field", "@id": "human_eval_ratings/server_received_at", "name": "server_received_at", "description": "UTC server-side receipt timestamp (ISO 8601).", "dataType": "sc:Text"}
+      ]
+    },
+    {
+      "@type": "cr:RecordSet",
+      "@id": "eval_records",
+      "name": "eval_records",
+      "description": "One record per (evaluated_model, dialogue) pair from the offline-evaluation rerun. Each record contains the model's regenerated assistant responses at each trigger turn, the GPT-5.4 judge's score / rationale / evidence quote, the per-agent token usage, and the original Gemini-2.5-Pro curation response for diff.",
+      "field": [
+        {"@type": "cr:Field", "@id": "eval_records/unique_id_eval", "name": "unique_id_eval", "description": "Composite primary key {blueprint_id}__style{N}__{uuid}; matches unique_id_eval in dialogues.", "dataType": "sc:Text"},
+        {"@type": "cr:Field", "@id": "eval_records/blueprint_id", "name": "blueprint_id", "description": "Source-dialogue blueprint identifier.", "dataType": "sc:Text"},
+        {"@type": "cr:Field", "@id": "eval_records/scenario_id", "name": "scenario_id", "description": "Source-scenario identifier.", "dataType": "sc:Text"},
+        {"@type": "cr:Field", "@id": "eval_records/category_key", "name": "category_key", "description": "Persona category.", "dataType": "sc:Text"},
+        {"@type": "cr:Field", "@id": "eval_records/style_combination_index", "name": "style_combination_index", "description": "1-24 CSI style index used for the source dialogue.", "dataType": "sc:Integer"},
+        {"@type": "cr:Field", "@id": "eval_records/evaluated_model", "name": "evaluated_model", "description": "Model under test (matches the filename prefix).", "dataType": "sc:Text"},
+        {"@type": "cr:Field", "@id": "eval_records/source_evaluated_model", "name": "source_evaluated_model", "description": "Model that originally curated the dialogue history (Gemini-2.5-Pro for the released corpus).", "dataType": "sc:Text"},
+        {"@type": "cr:Field", "@id": "eval_records/source_results_path", "name": "source_results_path", "description": "Source dialogue file (relative path within the release).", "dataType": "sc:Text"},
+        {"@type": "cr:Field", "@id": "eval_records/num_trigger_points", "name": "num_trigger_points", "description": "Number of trigger points scored in this dialogue.", "dataType": "sc:Integer"},
+        {"@type": "cr:Field", "@id": "eval_records/trigger_stats", "name": "trigger_stats", "description": "Per-trigger-type Pass / Partial / Fail / Skipped counts.", "dataType": "sc:StructuredValue"},
+        {"@type": "cr:Field", "@id": "eval_records/trigger_points", "name": "trigger_points", "description": "Per-trigger {turn, evaluation_rubric, evaluation_result {status, score, rationale, evidence}}.", "dataType": "sc:StructuredValue"},
+        {"@type": "cr:Field", "@id": "eval_records/turn_records", "name": "turn_records", "description": "Per-turn {turn, user_message, assistant_response, original_assistant_response} for diff against the original curation.", "dataType": "sc:StructuredValue"},
+        {"@type": "cr:Field", "@id": "eval_records/token_usage", "name": "token_usage", "description": "Per-agent (assistant, judge) prompt and completion token counts and call counts.", "dataType": "sc:StructuredValue"}
       ]
     }
   ]

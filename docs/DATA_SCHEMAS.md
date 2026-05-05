@@ -111,7 +111,6 @@ The released benchmark. One row per curated dialogue (198 rows).
   "style_combination_index": 9,
   "evaluated_model": "gemini-2.5-pro",
   "num_turns_completed": 8,
-  "trigger_stats": {"EMERGENT": {"PASS": 1, "PARTIAL": 0, "FAIL": 0, "SKIPPED": 0}, ...},
   "trigger_points": [
     {
       "turn": 2,
@@ -120,12 +119,6 @@ The released benchmark. One row per curated dialogue (198 rows).
         "pass_criteria": "...",
         "partial_criteria": "...",
         "fail_criteria": "..."
-      },
-      "evaluation_result": {
-        "status": "EVALUATED",
-        "score": "PASS",
-        "rationale": "...",
-        "evidence": "\"…\""
       }
     },
     ...
@@ -154,14 +147,13 @@ The released benchmark. One row per curated dialogue (198 rows).
 | `style_combination_index` | int | 1–24, indexing the CSI factorial style. See [`proactbench/styles.py`](../proactbench/styles.py). |
 | `evaluated_model` | string | Model whose responses populated the dialogue at curation time (Gemini-2.5-Pro for the released corpus). |
 | `num_turns_completed` | int | 5–10. Min enforced; max bounded by the planner's stop condition. |
-| `trigger_stats` | object | Per-trigger-type tally of PASS / PARTIAL / FAIL / SKIPPED. |
-| `trigger_points` | array | One entry per trigger turn: rubric (pass/partial/fail criteria), evaluation result (score, rationale, verbatim evidence quote). |
+| `trigger_points` | array | One entry per trigger turn: only `turn` (1-indexed) and `evaluation_rubric` (pass/partial/fail criteria authored by the Planner before the model responded). **No curation-time judge output is included in the released `final_dialogues.jsonl`** — `final_dialogues.jsonl` carries the test definition (rubric) and the dialogue history; per-model scored outputs (responses, scores, rationales, evidence quotes) live in `dataset/eval/{model_id}_proactivity_bench_results.jsonl`. |
 | `turn_records` | array | Per-turn record: planner state, user message, assistant response. |
 | `token_usage` | object | Per-agent prompt/completion token counts. |
 
 ## Online vs offline evaluation outputs
 
-`online_eval.jsonl` and `offline_eval.jsonl` use the same top-level schema as
+`online_eval.jsonl` and `eval.jsonl` use the same top-level schema as
 `final_dialogues.jsonl` but with two differences in the offline form:
 
 * `token_usage` has only `assistant` and `judge` (no `planner` / `user_agent`).
@@ -174,6 +166,38 @@ The released benchmark. One row per curated dialogue (198 rows).
 Trigger scores are one of `PASS`, `PARTIAL`, `FAIL`, or `SKIPPED` (the last
 when the pipeline couldn't reach the trigger turn). Aggregation uses the
 convention `Pass=1.0`, `Partial=0.5`, `Fail=0.0` for the "weighted score".
+
+## Per-model evaluation outputs (`dataset/eval/`)
+
+One pair of files per evaluated model: `{model_id}_proactivity_bench_results.jsonl` (per-dialogue) and `{model_id}_proactivity_bench_metrics.json` (aggregate).
+
+### `dataset/eval/{model_id}_proactivity_bench_results.jsonl`
+
+One record per dialogue (198 rows per file × 16 models = 3{,}168 records). Same schema as `final_dialogues.jsonl` plus offline-specific provenance fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `unique_id_eval` | string | Composite primary key `{blueprint_id}__style{N}__{uuid}`; matches `unique_id_eval` in `final_dialogues.jsonl`. |
+| `blueprint_id`, `scenario_id`, `uuid`, `category_key`, `style_combination_index` | various | Carried over from the source dialogue. |
+| `evaluated_model` | string | Model under test (matches filename prefix). |
+| `source_evaluated_model` | string | Model that curated the source dialogue (Gemini-2.5-Pro for the released corpus). |
+| `source_results_path` | string | Relative path to source dialogue file (`dataset/final_dialogues.jsonl`); absolute internal paths are redacted. |
+| `num_trigger_points` | int | Number of trigger points scored. |
+| `trigger_stats` | object | Per-trigger-type Pass/Partial/Fail/Skipped counts. |
+| `trigger_points` | list of objects | Per-trigger `{turn, evaluation_rubric, evaluation_result {status, score, rationale, evidence}}`. |
+| `turn_records` | list of objects | Per-turn `{turn, user_message, assistant_response, original_assistant_response}`; the last carries the source curation model's response so you can diff. |
+| `token_usage` | object | Per-agent (`assistant`, `judge`) prompt/completion tokens + call counts. |
+
+### `dataset/eval/{model_id}_proactivity_bench_metrics.json`
+
+Aggregate weighted scores and pass rates per trigger type. Weighted score uses `Pass=1.0`, `Partial=0.5`, `Fail=0.0`; pass rate counts only `PASS`.
+
+| Field | Type | Description |
+|---|---|---|
+| `Overall`, `Emergent`, `Critical`, `Recovery` | float | Weighted score in `[0, 1]`. |
+| `Ov_pass`, `Em_pass`, `Cr_pass`, `Re_pass` | float | Pass rate in `[0, 1]`. |
+
+The 16 model IDs are listed in `dataset/eval/README.md` with their paper display names.
 
 ## Human-evaluation data (`dataset/human_eval/`)
 

@@ -1,0 +1,55 @@
+{
+  "aggregate_trigger_stats": {
+    "EMERGENT": {
+      "PASS": 52,
+      "PARTIAL": 46,
+      "FAIL": 103,
+      "SKIPPED": 0
+    },
+    "CRITICAL": {
+      "PASS": 16,
+      "PARTIAL": 55,
+      "FAIL": 161,
+      "SKIPPED": 0
+    },
+    "RECOVERY": {
+      "PASS": 2,
+      "PARTIAL": 15,
+      "FAIL": 174,
+      "SKIPPED": 0
+    }
+  },
+  "metrics": {
+    "eval/proactivity_emergent_pass_rate": 0.25870646766169153,
+    "eval/proactivity_emergent_partial_rate": 0.22885572139303484,
+    "eval/proactivity_emergent_weighted_score": 0.373134328358209,
+    "eval/proactivity_emergent_total": 201.0,
+    "eval/proactivity_critical_pass_rate": 0.06896551724137931,
+    "eval/proactivity_critical_partial_rate": 0.23706896551724138,
+    "eval/proactivity_critical_weighted_score": 0.1875,
+    "eval/proactivity_critical_total": 232.0,
+    "eval/proactivity_recovery_pass_rate": 0.010471204188481676,
+    "eval/proactivity_recovery_partial_rate": 0.07853403141361257,
+    "eval/proactivity_recovery_weighted_score": 0.049738219895287955,
+    "eval/proactivity_recovery_total": 191.0,
+    "eval/proactivity_overall_pass_rate": 0.11217948717948718,
+    "eval/proactivity_overall_weighted_score": 0.20512820512820512,
+    "eval/proactivity_total_dialogues": 198.0
+  },
+  "token_usage": {
+    "assistant": {
+      "mean_prompt_tokens_per_conversation": 0.0,
+      "mean_completion_tokens_per_conversation": 0.0,
+      "mean_calls_per_conversation": 0.0,
+      "total_prompt_tokens": 0,
+      "total_completion_tokens": 0
+    },
+    "judge": {
+      "mean_prompt_tokens_per_conversation": 14973.641414141413,
+      "mean_completion_tokens_per_conversation": 1443.0151515151515,
+      "mean_calls_per_conversation": 3.1515151515151514,
+      "total_prompt_tokens": 2964781,
+      "total_completion_tokens": 285717
+    }
+  }
+}

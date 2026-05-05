@@ -1,10 +1,12 @@
-"""Offline evaluation: rerun the evaluated model at each trigger point in a
-previously-generated dialogue, then score with a judge.
+"""ProactBench evaluation: rerun the evaluated model at each trigger point in
+a curated dialogue, then score with a judge.
 
-Uses the full conversation history up to each trigger turn as the context,
+Reads dialogues from ``dataset/final_dialogues.jsonl`` (each carrying the
+Planner-authored rubric per trigger but no curation-time judge labels), uses
+the full conversation history up to each trigger turn as the context,
 regenerates the assistant response from the model under evaluation, and has
-the judge apply the original rubric. The judge operates in neutral mode
-(persona/style are not exposed at scoring time)."""
+the judge apply the original rubric. The judge operates in neutral mode:
+persona and style are not exposed at scoring time."""
 
 from __future__ import annotations
 
@@ -16,9 +18,9 @@ from typing import Optional
 
 from tqdm import tqdm
 
-from ..clients import _is_openai_reasoning, make_client
-from ..prompts import USER_AGENT_SYSTEM_TEMPLATE, build_user_agent_eval_message
-from ..types import EvaluationRubric, TriggerPoint, UserAgentOutput
+from .clients import _is_openai_reasoning, make_client
+from .prompts import USER_AGENT_SYSTEM_TEMPLATE, build_user_agent_eval_message
+from .types import EvaluationRubric, TriggerPoint, UserAgentOutput
 
 
 # ── Generation configs ────────────────────────────────────────────────────────
@@ -27,8 +29,8 @@ JUDGE_GEN_CONFIG = dict(temperature=0.7, max_new_tokens=32768, top_p=1.0,
                         reasoning_effort="medium")
 EVAL_MODEL_GEN_CONFIG = dict(temperature=0.7, max_new_tokens=8192, top_p=1.0)
 
-_OFFLINE_JUDGE_PERSONA = "(Offline evaluation mode — no persona context available.)"
-_OFFLINE_JUDGE_STYLE = "(Not applicable — offline evaluation, no user message generation required.)"
+_NEUTRAL_JUDGE_PERSONA = "(Neutral evaluation mode — no persona context available.)"
+_NEUTRAL_JUDGE_STYLE = "(Not applicable — no user message generation required.)"
 
 
 def _sanitize_gen_config(gen_config: dict, model_name: str) -> dict:
@@ -121,7 +123,7 @@ def _call_judge(trigger: TriggerPoint, history_including_response: list[dict],
 
 # ── Per-dialogue driver ───────────────────────────────────────────────────────
 
-def run_offline_dialogue(
+def run_dialogue_eval(
     dialogue: dict,
     eval_client,
     eval_model: str,
@@ -213,7 +215,7 @@ def run_offline_dialogue(
 
 # ── Batch driver ──────────────────────────────────────────────────────────────
 
-def run_offline_eval(
+def run_eval(
     results_path: Path,
     output_path: Path,
     eval_model: str,
@@ -246,11 +248,11 @@ def run_offline_eval(
     judge_gen = _sanitize_gen_config(dict(judge_gen_config or JUDGE_GEN_CONFIG), judge_model)
 
     judge_system = USER_AGENT_SYSTEM_TEMPLATE.format(
-        persona=_OFFLINE_JUDGE_PERSONA, style=_OFFLINE_JUDGE_STYLE,
+        persona=_NEUTRAL_JUDGE_PERSONA, style=_NEUTRAL_JUDGE_STYLE,
     )
 
     worker = partial(
-        run_offline_dialogue,
+        run_dialogue_eval,
         eval_client=eval_client, eval_model=eval_model,
         eval_system_prompt=eval_system_prompt, eval_gen_config=eval_gen,
         judge_client=judge_client, judge_model=judge_model,
@@ -260,7 +262,7 @@ def run_offline_eval(
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with ThreadPoolExecutor(max_workers=num_threads) as pool, open(output_path, "w") as f:
         for r in tqdm(pool.map(worker, dialogues), total=len(dialogues),
-                      desc=f"Offline eval [{eval_model}]"):
+                      desc=f"Eval [{eval_model}]"):
             if r is not None:
                 f.write(json.dumps(r) + "\n")
                 f.flush()
@@ -268,7 +270,7 @@ def run_offline_eval(
 
 def _main():
     import argparse
-    ap = argparse.ArgumentParser(description=run_offline_eval.__doc__)
+    ap = argparse.ArgumentParser(description=run_eval.__doc__)
     ap.add_argument("--results-path", required=True, type=Path)
     ap.add_argument("--output-path", required=True, type=Path)
     ap.add_argument("--eval-model", required=True)
@@ -279,7 +281,7 @@ def _main():
     ap.add_argument("--judge-base-url", default=None)
     ap.add_argument("--gemini-think-budget", type=int, default=None)
     args = ap.parse_args()
-    run_offline_eval(
+    run_eval(
         results_path=args.results_path, output_path=args.output_path,
         eval_model=args.eval_model, judge_model=args.judge_model,
         num_threads=args.num_threads, num_samples=args.num_samples,

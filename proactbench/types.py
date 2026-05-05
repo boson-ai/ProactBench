@@ -17,7 +17,7 @@ from pydantic import BaseModel, model_validator
 
 
 # ═════════════════════════════════════════════════════════════════════════════
-# PROMPT PLUMBING (used by synthesis)
+# PROMPT PLUMBING
 # ═════════════════════════════════════════════════════════════════════════════
 
 @dataclass

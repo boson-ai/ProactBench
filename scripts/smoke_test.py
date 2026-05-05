@@ -1,203 +1,112 @@
-"""End-to-end smoke test: 1 persona → 1 task → 1 blueprint → 1 online dialogue
-→ 1 offline rescore. Exercises every component using small, cheap defaults
-(``o4-mini`` reasoning model with ``reasoning_effort=low`` for synthesis +
-Planner/User-Agent, ``gpt-4o`` as the model under evaluation).
+"""End-to-end smoke test for the evaluation pipeline.
 
-By default only ``OPENAI_API_KEY`` is required. Override individual stage
-models on the CLI to exercise other providers (set ``GEMINI_API_KEY`` for
-Gemini, ``ANTHROPIC_API_KEY`` for Claude).
+Reads the first 2 dialogues from ``dataset/final_dialogues.jsonl``, reruns
+them with a cheap evaluated model and a cheap judge model, and verifies the
+output JSONL has the expected per-dialogue records with trigger-point scores.
 
 Usage:
 
-    # Default (OpenAI-only, ~3 minutes):
+    # Default (OpenAI-only, ~1 minute):
     python scripts/smoke_test.py
 
-    # Cross-provider (validate with Gemini, evaluate Claude):
-    python scripts/smoke_test.py --validate-model gemini-2.5-flash --eval-model claude-haiku-4-5-20251001
+    # Override eval / judge models:
+    python scripts/smoke_test.py --eval-model gpt-4o --judge-model gpt-4o
 
 Exits non-zero and prints the failing stage on any error.
 """
-
 from __future__ import annotations
 
 import argparse
 import json
 import os
 import shutil
-import subprocess
 import sys
 import tempfile
 import time
 from pathlib import Path
 
-# Ensure we import the in-repo package even when run from the repo root.
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
+
+from proactbench import run_eval
 
 
 def _log(msg: str) -> None:
     print(f"[smoke {time.strftime('%H:%M:%S')}] {msg}", flush=True)
 
 
-def _require_env(name: str) -> str:
-    val = os.environ.get(name)
-    if not val:
-        print(f"error: {name} must be set in the environment", file=sys.stderr)
-        sys.exit(2)
-    return val
-
-
-def _run(cmd: list[str]) -> None:
-    _log("$ " + " ".join(str(c) for c in cmd))
-    r = subprocess.run(cmd, check=False)
-    if r.returncode != 0:
-        raise RuntimeError(f"command failed with exit {r.returncode}: {' '.join(cmd)}")
+def _fail(stage: str, exc: Exception) -> int:
+    print(f"[smoke FAIL] stage={stage}: {type(exc).__name__}: {exc}", flush=True)
+    return 1
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__)
-    # Defaults chosen so that the smoke test runs with only OPENAI_API_KEY set.
-    # Overrideable for cross-provider checks.
-    ap.add_argument("--cheap-model", default="o4-mini",
-                    help="OpenAI reasoning model used for synthesis stages and "
-                         "Planner/User Agent in the online loop.")
-    ap.add_argument("--judge-model", default="o4-mini",
-                    help="Model used as the judge in offline eval.")
-    ap.add_argument("--validate-model", default="o4-mini",
-                    help="Model used as the independent judge in stage 3 "
-                         "(blueprint validation).")
+    ap = argparse.ArgumentParser()
     ap.add_argument("--eval-model", default="gpt-4o",
-                    help="Model under evaluation (the system being benchmarked).")
-    ap.add_argument("--output-dir", type=Path, default=None,
-                    help="Where to write intermediate artifacts. Default: a fresh /tmp dir.")
-    ap.add_argument("--keep", action="store_true",
-                    help="Don't remove --output-dir on exit.")
-    ap.add_argument("--skip-synthesis", action="store_true",
-                    help="Skip stages 1-3 (useful when you already have blueprints.jsonl).")
+                    help="Evaluated model (cheap by default).")
+    ap.add_argument("--judge-model", default="gpt-4o",
+                    help="Judge model (cheap by default).")
+    ap.add_argument("--num-samples", type=int, default=2,
+                    help="Number of dialogues to evaluate.")
+    ap.add_argument("--threads", type=int, default=8,
+                    help="Concurrent API workers (default 8).")
     args = ap.parse_args()
 
-    _require_env("OPENAI_API_KEY")
-    if "gemini" in args.validate_model or "gemini" in args.eval_model:
-        _require_env("GEMINI_API_KEY")
-
-    out = args.output_dir or Path(tempfile.mkdtemp(prefix="proactbench_smoke_"))
-    out.mkdir(parents=True, exist_ok=True)
-    _log(f"output dir: {out}")
-
-    tasks_path = out / "tasks.jsonl"
-    blueprints_path = out / "blueprints.jsonl"
-    validation_path = out / "validation_results.jsonl"
-    validated_path = out / "validated_blueprints.jsonl"
-    online_path = out / "online_eval.jsonl"
-    offline_path = out / "offline_eval.jsonl"
-
-    python = sys.executable
-
-    try:
-        if not args.skip_synthesis:
-            _log("─── Stage 1: generate_tasks (1 persona × 5 categories × 1 scenario each) ───")
-            _run([
-                python, "-m", "proactbench.synthesis.generate_tasks",
-                "--num-personas", "1",
-                "--num-scenarios", "1",
-                "--output-path", str(tasks_path),
-                "--model", args.cheap_model,
-                "--reasoning-effort", "low",
-                "--num-threads", "2",
-                "--no-progress",
-            ])
-            assert tasks_path.exists(), "tasks.jsonl not written"
-            n_tasks = sum(1 for _ in open(tasks_path))
-            _log(f"stage 1 OK — wrote {n_tasks} persona row(s)")
-
-            _log("─── Stage 2: generate_blueprints (1 blueprint, 1 style) ───")
-            _run([
-                python, "-m", "proactbench.synthesis.generate_blueprints",
-                "--tasks-path", str(tasks_path),
-                "--num-personas", "1",
-                "--output-path", str(blueprints_path),
-                "--model", args.cheap_model,
-                "--reasoning-effort", "low",
-                "--num-styles-per-task", "1",
-                "--seed", "42",
-                "--num-threads", "2",
-                "--no-progress",
-            ])
-            assert blueprints_path.exists() and blueprints_path.stat().st_size > 0, "blueprints.jsonl empty"
-            n_bp = sum(1 for _ in open(blueprints_path))
-            _log(f"stage 2 OK — wrote {n_bp} blueprint(s)")
-
-            _log("─── Stage 3: validate_blueprints ───")
-            _run([
-                python, "-m", "proactbench.synthesis.validate_blueprints",
-                "--blueprints-path", str(blueprints_path),
-                "--tasks-path", str(tasks_path),
-                "--num-personas", "1",
-                "--output-path", str(validation_path),
-                "--model", args.validate_model,
-                "--reasoning-effort", "low",
-                "--num-threads", "2",
-                "--no-progress",
-            ])
-            assert validation_path.exists()
-            # Pass-through: if none passed, fall back to original blueprints
-            if not validated_path.exists() or validated_path.stat().st_size == 0:
-                _log("stage 3 note — no blueprints passed audit; using unvalidated blueprints for eval")
-                shutil.copy(blueprints_path, validated_path)
-            else:
-                n_pass = sum(1 for _ in open(validated_path))
-                _log(f"stage 3 OK — {n_pass} blueprint(s) passed audit")
-        else:
-            if not validated_path.exists():
-                if blueprints_path.exists():
-                    shutil.copy(blueprints_path, validated_path)
-                else:
-                    raise RuntimeError("--skip-synthesis requires an existing blueprints.jsonl or validated_blueprints.jsonl")
-
-        _log("─── Stage 4: online eval (one full three-agent dialogue) ───")
-        from proactbench.evaluation import run_online_eval
-        run_online_eval(
-            blueprints_path=validated_path,
-            output_path=online_path,
-            evaluated_model=args.eval_model,
-            planner_model=args.cheap_model,
-            user_agent_model=args.cheap_model,
-            tasks_path=tasks_path,
-            num_personas=1,
-            num_turns=4,            # short dialogue for smoke speed
-            num_samples=1,
-            num_threads=1,
-        )
-        assert online_path.exists() and online_path.stat().st_size > 0, "online_eval.jsonl empty"
-        row = json.loads(open(online_path).readline())
-        _log(f"stage 4 OK — dialogue turns={row['num_turns_completed']}  "
-             f"triggers={len(row['trigger_points'])}")
-
-        _log("─── Stage 5: offline eval (rescore the new dialogue) ───")
-        from proactbench.evaluation import run_offline_eval
-        run_offline_eval(
-            results_path=online_path,
-            output_path=offline_path,
-            eval_model=args.eval_model,
-            judge_model=args.judge_model,
-            num_threads=1,
-        )
-        assert offline_path.exists() and offline_path.stat().st_size > 0, "offline_eval.jsonl empty"
-        row = json.loads(open(offline_path).readline())
-        _log(f"stage 5 OK — rescored triggers={row['num_trigger_points']}  "
-             f"stats={row['trigger_stats']}")
-
-        _log("✓ SMOKE TEST PASSED")
-        _log(f"  artifacts: {out}")
-        return 0
-    except Exception as e:
-        _log(f"✗ SMOKE TEST FAILED: {e!r}")
-        _log(f"  inspect artifacts at: {out}")
+    if not os.environ.get("OPENAI_API_KEY"):
+        print("[smoke] OPENAI_API_KEY not set", flush=True)
         return 1
+
+    src = ROOT / "dataset" / "final_dialogues.jsonl"
+    if not src.exists():
+        print(f"[smoke] missing {src}", flush=True)
+        return 1
+
+    tmp = Path(tempfile.mkdtemp(prefix="proactbench_smoke_"))
+    try:
+        # Subsample for cheap test
+        subset = tmp / "dialogues_subset.jsonl"
+        rows = src.read_text().splitlines()[: args.num_samples]
+        subset.write_text("\n".join(r for r in rows if r.strip()) + "\n")
+        _log(f"sub-sample: {args.num_samples} dialogues -> {subset}")
+
+        # Run eval
+        out = tmp / "eval_out.jsonl"
+        _log(f"running eval: eval={args.eval_model} judge={args.judge_model}")
+        try:
+            run_eval(
+                results_path=subset,
+                output_path=out,
+                eval_model=args.eval_model,
+                judge_model=args.judge_model,
+                num_threads=args.threads,
+            )
+        except Exception as e:
+            return _fail("run_eval", e)
+
+        if not out.exists():
+            print("[smoke FAIL] no output file produced", flush=True); return 1
+        records = [json.loads(l) for l in out.read_text().splitlines() if l.strip()]
+        if not records:
+            print("[smoke FAIL] output file is empty", flush=True); return 1
+
+        for r in records:
+            for need in ("blueprint_id", "evaluated_model", "trigger_points"):
+                if need not in r:
+                    print(f"[smoke FAIL] record missing {need!r}", flush=True); return 1
+            if r["evaluated_model"] != args.eval_model:
+                print(f"[smoke FAIL] wrong evaluated_model in record: got {r['evaluated_model']!r}",
+                      flush=True); return 1
+            for tp in r["trigger_points"]:
+                er = tp.get("evaluation_result") or {}
+                if not er.get("score"):
+                    print("[smoke FAIL] trigger missing judge score", flush=True); return 1
+
+        n_trigs = sum(len(r["trigger_points"]) for r in records)
+        _log(f"OK: {len(records)} records / {n_trigs} triggers, all carry valid judge scores")
+        print("SMOKE TEST PASSED", flush=True)
+        return 0
     finally:
-        if not args.keep and args.output_dir is None:
-            # Only auto-cleanup if we created a throwaway dir.
-            pass  # leave it for inspection anyway; user can rm manually
+        shutil.rmtree(tmp, ignore_errors=True)
 
 
 if __name__ == "__main__":

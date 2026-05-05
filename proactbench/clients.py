@@ -9,8 +9,7 @@ Each client implements two methods that the rest of the benchmark depends on:
 
   * ``chat_structured(model, messages, response_format, system=None, **gen)`` —
     returns a parsed Pydantic object matching ``response_format``.
-    Used by all three synthesis stages (tasks, blueprints, validation) and by
-    the Planner / judge in the main evaluation loop.
+    Used by the judge in the evaluation loop.
 
 Supported providers:
 
