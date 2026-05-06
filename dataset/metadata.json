@@ -16,6 +16,7 @@
       "@type": "@vocab"
     },
     "dct": "http://purl.org/dc/terms/",
+    "equivalentProperty": "cr:equivalentProperty",
     "examples": {
       "@id": "cr:examples",
       "@type": "@json"
@@ -38,6 +39,7 @@
     "regex": "cr:regex",
     "repeated": "cr:repeated",
     "replace": "cr:replace",
+    "samplingRate": "cr:samplingRate",
     "sc": "https://schema.org/",
     "separator": "cr:separator",
     "source": "cr:source",
@@ -72,162 +74,73 @@
   "rai:dataPreprocessingProtocol": "Dialogues that fail to complete the minimum 5-turn requirement or that fail blueprint validation are excluded from the corpus. The released corpus has 198 dialogues that all complete >=5 turns with at least 2 trigger points each.",
   "rai:dataReleaseMaintenancePlan": "The dataset will be hosted at an anonymous URL during peer review (HuggingFace Datasets after acceptance, with the same Apache-2.0 license). Updates and corrections will be tracked via the GitHub repository's release tags.",
   "rai:dataUseCases": "Evaluating large language models on conversational proactivity; comparing model behaviour at different conversational phases (Emergent / Critical / Recovery); studying robustness to user communication style variation; calibration of LLM-as-judge agreement.",
-  "rai:dataLimitation": "All dialogues are in English; personas are US-based (sourced from Nemotron-Personas-USA). Norms around unsolicited advice and initiative-taking differ across cultures, so ProactBench scores should not be used to guide deployment beyond US-English contexts. The benchmark uses a single seed model (Gemini-2.5-Pro) for the curation phase, so absolute pass rates should be interpreted relative to that fixed seed; rankings are robust across cross-family judge-swaps but absolute magnitudes can shift.",
+  "rai:dataLimitations": "All dialogues are in English; personas are US-based (sourced from Nemotron-Personas-USA). Norms around unsolicited advice and initiative-taking differ across cultures, so ProactBench scores should not be used to guide deployment beyond US-English contexts. The benchmark uses a single seed model (Gemini-2.5-Pro) for the curation phase, so absolute pass rates should be interpreted relative to that fixed seed; rankings are robust across cross-family judge-swaps but absolute magnitudes can shift. The scenario base is 25 (persona, category) scenarios drawn from 19 personas, expanded across 24 communication styles; per-(model, style) cell sizes are accordingly small (~8 dialogues per style on average). Offline scoring re-uses the curation model's conversation history; an alternative-curation ablation in the paper bounds this effect but does not eliminate it. The GPT-5.4-authored rubric is the single point of subjective interpretation; cross-family judge-swap and human-validation studies are reported as bounds.",
+  "rai:hasSyntheticData": true,
+  "rai:syntheticDataDescription": "The entire ProactBench dialogue corpus is synthetic. Personas are sampled from Nemotron-Personas-USA (NVIDIA, CC-BY-4.0), itself a synthetic persona dataset generated from a probabilistic graphical model conditioned on US Census demographics. Scenarios, blueprints, and dialogues are produced by a three-agent LLM pipeline (Planner, User Agent, Assistant Model); see rai:dataCollection. No real-user conversations, transcripts, or behavioural data are collected, scraped, or redistributed. The only human-generated content in the release is the 275 + 146 ratings from the two Prolific human-validation studies (anonymized A01-A18 and P01-P08), which are evaluations of synthetic dialogues rather than primary content.",
   "rai:dataBiases": "Personas are sampled from a US-English distribution and the Communication Styles Inventory was developed primarily in workplace contexts; the benchmark may be biased toward Western professional communication norms. The Planner and offline judge are both GPT-5.4 in the main configuration, raising the possibility of stylistic self-affinity (mitigated by the cross-family judge-swap ablation reported in the paper).",
   "rai:dataSocialImpact": "ProactBench measures whether LLMs can take grounded, anchor-specific initiative in dialogue. Higher proactivity scores should not be interpreted as a universal objective: unsolicited suggestions can be helpful or intrusive depending on user preferences, privacy context, and task criticality. We treat ProactBench as a capability probe, not a training target in isolation; production deployment decisions should weigh proactivity alongside explicit user preferences and domain-specific appropriateness.",
   "rai:personalSensitiveInformation": "No personal or sensitive real-user information is included. Personas are synthetic (derived from Nemotron-Personas-USA, which is itself a synthetic persona dataset).",
   "distribution": [
     {
       "@type": "cr:FileObject",
-      "@id": "tasks.jsonl",
+      "@id": "tasks_jsonl",
       "name": "tasks.jsonl",
-      "description": "Stage 1 output: per-persona scenarios (hidden goal, explicit trigger, implicit anchors, ideal trajectory).",
+      "description": "Stage 1 output: per-persona scenarios (hidden goal, explicit trigger, implicit anchors, ideal trajectory). 50 rows, 500 candidate scenarios total (10 per persona).",
       "contentUrl": "tasks.jsonl",
-      "encodingFormat": "application/jsonl",
-      "sha256": "see-release-tag"
+      "encodingFormat": "application/jsonlines",
+      "sha256": "78165da59827be5c8bdc0186d66c49ab97da280ab98d772d3bfc3d576c55b534"
     },
     {
       "@type": "cr:FileObject",
-      "@id": "blueprints.jsonl",
-      "name": "blueprints.jsonl",
-      "description": "Stage 2 output: turn-by-turn interaction roadmaps for each (persona, scenario, communication-style) triple.",
-      "contentUrl": "blueprints.jsonl",
-      "encodingFormat": "application/jsonl",
-      "sha256": "see-release-tag"
-    },
-    {
-      "@type": "cr:FileObject",
-      "@id": "validated_blueprints.jsonl",
-      "name": "validated_blueprints.jsonl",
-      "description": "Stage 3 output: subset of blueprints whose independent-judge audit decision is PASS.",
-      "contentUrl": "validated_blueprints.jsonl",
-      "encodingFormat": "application/jsonl",
-      "sha256": "see-release-tag"
-    },
-    {
-      "@type": "cr:FileObject",
-      "@id": "validation_results.jsonl",
-      "name": "validation_results.jsonl",
-      "description": "Independent-judge audit decisions and feedback for each blueprint.",
-      "contentUrl": "validation_results.jsonl",
-      "encodingFormat": "application/jsonl",
-      "sha256": "see-release-tag"
-    },
-    {
-      "@type": "cr:FileObject",
-      "@id": "final_dialogues.jsonl",
-      "name": "final_dialogues.jsonl",
-      "description": "Main corpus: 198 curated dialogues with 624 trigger points, scored at curation time. The benchmark proper.",
-      "contentUrl": "final_dialogues.jsonl",
-      "encodingFormat": "application/jsonl",
-      "sha256": "see-release-tag"
-    },
-    {
-      "@type": "cr:FileObject",
-      "@id": "selected_tasks.jsonl",
+      "@id": "selected_tasks_jsonl",
       "name": "selected_tasks.jsonl",
-      "description": "Subset of tasks selected for the final corpus.",
+      "description": "Curated scenario base selected for dialogue rollout: 19 personas with 25 (persona, category) scenarios stratified at 5 per life-domain category.",
       "contentUrl": "selected_tasks.jsonl",
-      "encodingFormat": "application/jsonl",
-      "sha256": "see-release-tag"
-    },
-    {
-      "@type": "cr:FileSet",
-      "@id": "human_eval_results",
-      "name": "human_eval_results",
-      "description": "Per-annotator rating files from Prolific human-validation Study 1 (18 pseudonymized raters who submitted at least one rating, 275 raw ratings on 60 stratified items; 258 retained after the pre-registered kappa_quad < 0.10 worker-quality filter). Each line is one rating with score, free-text rationale, confidence Likert, and timing.",
-      "encodingFormat": "application/jsonl",
-      "containedIn": {"@id": "human_eval"},
-      "includes": "human_eval/results/A*.jsonl"
+      "encodingFormat": "application/jsonlines",
+      "sha256": "1744d99815966923220251981046aefc74cacc8cae7b33cb8078ac9343ad5c01"
     },
     {
       "@type": "cr:FileObject",
-      "@id": "human_eval_sample_items",
-      "name": "human_eval/sample_items.json",
-      "description": "The 60 trigger points presented to annotators, with dialogue history, rubrics, evaluated-model responses, and the held-out judge scores for downstream comparison.",
-      "contentUrl": "human_eval/sample_items.json",
-      "encodingFormat": "application/json",
-      "sha256": "see-release-tag"
+      "@id": "blueprints_jsonl",
+      "name": "blueprints.jsonl",
+      "description": "Stage 2 output: turn-by-turn interaction roadmaps for each (selected scenario, communication style) pairing. 250 rows = 25 scenarios x 10 styles.",
+      "contentUrl": "blueprints.jsonl",
+      "encodingFormat": "application/jsonlines",
+      "sha256": "142d9db807f04212471cc1a6c535f461b2317a03d5b1466c75c3a04f62898e1e"
     },
     {
       "@type": "cr:FileObject",
-      "@id": "human_eval_briefing",
-      "name": "human_eval/ANNOTATOR_BRIEFING.md",
-      "description": "Verbatim briefing document delivered to annotators (PASS/PARTIAL/FAIL definitions, exclusions, common-pitfalls list).",
-      "contentUrl": "human_eval/ANNOTATOR_BRIEFING.md",
-      "encodingFormat": "text/markdown",
-      "sha256": "see-release-tag"
+      "@id": "validation_results_jsonl",
+      "name": "validation_results.jsonl",
+      "description": "Independent-judge audit decisions and feedback for each blueprint. 250 rows.",
+      "contentUrl": "validation_results.jsonl",
+      "encodingFormat": "application/jsonlines",
+      "sha256": "e24738e560fb4e3a18cee25de7e8f961452a5b9c780179e3b306d8f314b64548"
     },
     {
       "@type": "cr:FileObject",
-      "@id": "human_eval_instructions",
-      "name": "human_eval/INSTRUCTIONS_FOR_ANNOTATORS.md",
-      "description": "Procedural instructions for annotators (rating mechanics, interface walk-through).",
-      "contentUrl": "human_eval/INSTRUCTIONS_FOR_ANNOTATORS.md",
-      "encodingFormat": "text/markdown",
-      "sha256": "see-release-tag"
+      "@id": "validated_blueprints_jsonl",
+      "name": "validated_blueprints.jsonl",
+      "description": "Stage 3 output: subset of blueprints whose independent-judge audit decision is PASS. 207 rows.",
+      "contentUrl": "validated_blueprints.jsonl",
+      "encodingFormat": "application/jsonlines",
+      "sha256": "1151c1d38b028c38d98890d6ac86eb6abba47c2c795d8ffc35fddff3ec8faa77"
     },
     {
       "@type": "cr:FileObject",
-      "@id": "human_eval_analysis_script",
-      "name": "human_eval/analyze_results.py",
-      "description": "Reproduces the headline statistics from the paper: Krippendorff's alpha per trigger type, Cohen's kappa_quad (consensus and per-rating), 3x3 confusion matrices, with bootstrap CIs.",
-      "contentUrl": "human_eval/analyze_results.py",
-      "encodingFormat": "text/x-python",
-      "sha256": "see-release-tag"
-    },
-    {
-      "@type": "cr:FileSet",
-      "@id": "human_eval_pairwise_results",
-      "name": "human_eval_pairwise_results",
-      "description": "Per-annotator rating files from Study 2 (pairwise rubric-injection comparison). 8 pseudonymized Prolific raters, 146 forced-choice judgements on 80 stratified Recovery items (144 non-tie comparisons enter the B-preference statistic; 124 remain after the pre-registered attentiveness filter on rater median per-item time).",
-      "encodingFormat": "application/jsonl",
-      "containedIn": {"@id": "human_eval_pairwise"},
-      "includes": "human_eval/pairwise/results/P*.jsonl"
-    },
-    {
-      "@type": "cr:FileObject",
-      "@id": "human_eval_pairwise_sample",
-      "name": "human_eval/pairwise/sample_items.json",
-      "description": "The 80 Recovery trigger points presented to Study 2 annotators in pairwise comparison: each carries the dialogue context, the rubric, the Case A response (vanilla generation), the Case B response (rubric-conditioned regeneration by gemini-2.5-pro), and the original Case A judge label.",
-      "contentUrl": "human_eval/pairwise/sample_items.json",
-      "encodingFormat": "application/json",
-      "sha256": "see-release-tag"
-    },
-    {
-      "@type": "cr:FileObject",
-      "@id": "human_eval_pairwise_case_b",
-      "name": "human_eval/pairwise/case_b_responses/case_b.jsonl",
-      "description": "Case B (rubric-conditioned) Recovery responses regenerated by gemini-2.5-pro for the pairwise comparison.",
-      "contentUrl": "human_eval/pairwise/case_b_responses/case_b.jsonl",
-      "encodingFormat": "application/jsonl",
-      "sha256": "see-release-tag"
-    },
-    {
-      "@type": "cr:FileObject",
-      "@id": "human_eval_pairwise_readme",
-      "name": "human_eval/pairwise/README.md",
-      "description": "Study design, sampling, statistical power, and Prolific configuration for Study 2.",
-      "contentUrl": "human_eval/pairwise/README.md",
-      "encodingFormat": "text/markdown",
-      "sha256": "see-release-tag"
-    },
-    {
-      "@type": "cr:FileObject",
-      "@id": "human_eval_pairwise_analysis_script",
-      "name": "human_eval/pairwise/analyze_pairwise.py",
-      "description": "Computes B-preference rate (overall and per Case-A judge stratum), exact binomial test vs chance, item-clustered bootstrap CIs, and per-rater sanity checks.",
-      "contentUrl": "human_eval/pairwise/analyze_pairwise.py",
-      "encodingFormat": "text/x-python",
-      "sha256": "see-release-tag"
+      "@id": "final_dialogues_jsonl",
+      "name": "final_dialogues.jsonl",
+      "description": "Main corpus: 198 curated dialogues with 624 trigger points (201 EMERGENT / 232 CRITICAL / 191 RECOVERY). Each row carries the full ten-turn record, the trigger schedule, and the Planner-authored rubrics. The benchmark proper.",
+      "contentUrl": "final_dialogues.jsonl",
+      "encodingFormat": "application/jsonlines",
+      "sha256": "0758a95b2bdf8aae67d66592c894e48b0aab0e9bc459e2051ceeeb37f19ff96d"
     },
     {
       "@type": "cr:FileSet",
       "@id": "eval_results",
       "name": "eval_results",
-      "description": "Per-model offline-evaluation outputs: full assistant responses at each trigger turn, judge labels with rationale and evidence quotes, and original-curation responses for diff. One JSONL file per evaluated model (16 models, 198 dialogues each = 3168 dialogue-records). The raw inputs that feed every per-model number, ranking, and ablation in the paper.",
-      "encodingFormat": "application/jsonl",
-      "containedIn": {"@id": "eval"},
+      "description": "Per-model offline-evaluation outputs: full assistant responses at each trigger turn, judge labels with rationale and evidence quotes, and original-curation responses for diff. One JSONL file per evaluated model (16 models, 198 dialogues each).",
+      "encodingFormat": "application/jsonlines",
       "includes": "eval/*_proactivity_bench_results.jsonl"
     },
     {
@@ -236,8 +149,95 @@
       "name": "eval_metrics",
       "description": "Per-model aggregate metrics: weighted scores (Pass=1.0, Partial=0.5, Fail=0.0) and pass rates by trigger type. One JSON file per evaluated model.",
       "encodingFormat": "application/json",
-      "containedIn": {"@id": "eval"},
       "includes": "eval/*_proactivity_bench_metrics.json"
+    },
+    {
+      "@type": "cr:FileObject",
+      "@id": "human_eval_sample_items",
+      "name": "human_eval/sample_items.json",
+      "description": "The 60 trigger points presented to Study 1 annotators, with dialogue history, rubrics, evaluated-model responses, and the held-out judge scores for downstream comparison.",
+      "contentUrl": "human_eval/sample_items.json",
+      "encodingFormat": "application/json",
+      "sha256": "031104b73db198c138019a5f0a2fae28e5653bdbaeec5a9422468098280439cd"
+    },
+    {
+      "@type": "cr:FileObject",
+      "@id": "human_eval_briefing",
+      "name": "human_eval/ANNOTATOR_BRIEFING.md",
+      "description": "Verbatim briefing document delivered to Study 1 annotators (PASS/PARTIAL/FAIL definitions, exclusions, common-pitfalls list).",
+      "contentUrl": "human_eval/ANNOTATOR_BRIEFING.md",
+      "encodingFormat": "text/markdown",
+      "sha256": "ed36829f64c0d9bb633884ec8b2a2b803d8816505807ab67422c3405cadce0bc"
+    },
+    {
+      "@type": "cr:FileObject",
+      "@id": "human_eval_instructions",
+      "name": "human_eval/INSTRUCTIONS_FOR_ANNOTATORS.md",
+      "description": "Procedural instructions for Study 1 annotators (rating mechanics, interface walk-through).",
+      "contentUrl": "human_eval/INSTRUCTIONS_FOR_ANNOTATORS.md",
+      "encodingFormat": "text/markdown",
+      "sha256": "bf9a560892bd2c152ecbbb1c9dbce2fb2de170e305ba75d4585e67492911242a"
+    },
+    {
+      "@type": "cr:FileObject",
+      "@id": "human_eval_analysis_script",
+      "name": "human_eval/analyze_results.py",
+      "description": "Reproduces the headline statistics from the paper for Study 1: Krippendorff's alpha per trigger type, Cohen's kappa (consensus and per-rating), 3x3 confusion matrices, with bootstrap CIs.",
+      "contentUrl": "human_eval/analyze_results.py",
+      "encodingFormat": "text/x-python",
+      "sha256": "4ad7fc441dcb736d14a85acca19ecf164551063c7a896540c8ca7205b0d27338"
+    },
+    {
+      "@type": "cr:FileSet",
+      "@id": "human_eval_results",
+      "name": "human_eval_results",
+      "description": "Per-annotator rating files from Study 1 (Prolific human-validation): 18 pseudonymized raters who submitted at least one rating, 275 raw ratings on 60 stratified items; 258 retained after the pre-registered kappa_quad < 0.10 worker-quality filter.",
+      "encodingFormat": "application/jsonlines",
+      "includes": "human_eval/results/A*.jsonl"
+    },
+    {
+      "@type": "cr:FileObject",
+      "@id": "human_eval_pairwise_sample",
+      "name": "human_eval/pairwise/sample_items.json",
+      "description": "The 80 Recovery trigger points presented to Study 2 annotators in pairwise comparison: each carries the dialogue context, the rubric, the Case A response (vanilla generation), the Case B response (rubric-conditioned regeneration by gemini-2.5-pro), and the original Case A judge label.",
+      "contentUrl": "human_eval/pairwise/sample_items.json",
+      "encodingFormat": "application/json",
+      "sha256": "4f086d851247e49b17f0253db9cb1a939db70f5ba8283d348b5062cca1f45e00"
+    },
+    {
+      "@type": "cr:FileObject",
+      "@id": "human_eval_pairwise_case_b",
+      "name": "human_eval/pairwise/case_b_responses/case_b.jsonl",
+      "description": "Case B (rubric-conditioned) Recovery responses regenerated by gemini-2.5-pro for the pairwise comparison.",
+      "contentUrl": "human_eval/pairwise/case_b_responses/case_b.jsonl",
+      "encodingFormat": "application/jsonlines",
+      "sha256": "750dfc9a69b0862bce22b688ad0f5aa2ef41a054c49f4e83d2b98493ec9b3bfc"
+    },
+    {
+      "@type": "cr:FileObject",
+      "@id": "human_eval_pairwise_readme",
+      "name": "human_eval/pairwise/README.md",
+      "description": "Study 2 design, sampling, statistical power, and Prolific configuration.",
+      "contentUrl": "human_eval/pairwise/README.md",
+      "encodingFormat": "text/markdown",
+      "sha256": "4b01e9006df7fd2c04b17b93be3ae40533935015d02ea7b0f4020ee623876bfa"
+    },
+    {
+      "@type": "cr:FileObject",
+      "@id": "human_eval_pairwise_analysis_script",
+      "name": "human_eval/pairwise/analyze_pairwise.py",
+      "description": "Computes B-preference rate (overall and per Case-A judge stratum), exact binomial test vs chance, item-clustered bootstrap CIs, and per-rater sanity checks.",
+      "contentUrl": "human_eval/pairwise/analyze_pairwise.py",
+      "encodingFormat": "text/x-python",
+      "sha256": "552b9718e3b2d558c3313bbe3295d2fc4d6820f90860687724c208647d037c03"
+    },
+    {
+      "@type": "cr:FileSet",
+      "@id": "human_eval_pairwise_results",
+      "name": "human_eval_pairwise_results",
+      "description": "Per-annotator rating files from Study 2 (pairwise rubric-injection comparison). 8 pseudonymized Prolific raters, 146 forced-choice judgements on 80 stratified Recovery items (144 non-tie comparisons enter the B-preference statistic; 124 remain after the pre-registered attentiveness filter on rater median per-item time).",
+      "encodingFormat": "application/jsonlines",
+      "includes": "human_eval/pairwise/results/P*.jsonl"
     }
   ],
   "recordSet": [
@@ -245,53 +245,459 @@
       "@type": "cr:RecordSet",
       "@id": "dialogues",
       "name": "dialogues",
-      "description": "One record per curated dialogue (198 rows). Each contains the full multi-turn conversation, trigger points with rubrics, scoring decisions, and token usage.",
+      "description": "One record per curated dialogue (198 rows). Each contains the full multi-turn conversation, trigger points with rubrics, and token usage.",
       "field": [
-        {"@type": "cr:Field", "@id": "dialogues/uuid", "name": "uuid", "description": "Stable identifier for the dialogue.", "dataType": "sc:Text"},
-        {"@type": "cr:Field", "@id": "dialogues/unique_id_eval", "name": "unique_id_eval", "description": "Composite unique identifier formatted as `{blueprint_id}__style{style_combination_index}__{uuid}`. Guaranteed unique across the corpus and used as the primary key for joining with offline-evaluation outputs.", "dataType": "sc:Text"},
-        {"@type": "cr:Field", "@id": "dialogues/blueprint_id", "name": "blueprint_id", "description": "Identifier of the blueprint this dialogue was rolled out from (e.g. `BP_PROFESSIONAL_01_EVA`).", "dataType": "sc:Text"},
-        {"@type": "cr:Field", "@id": "dialogues/scenario_id", "name": "scenario_id", "description": "Identifier of the source scenario (e.g. `PROFESSIONAL_01`).", "dataType": "sc:Text"},
-        {"@type": "cr:Field", "@id": "dialogues/category_key", "name": "category_key", "description": "Persona category: one of `professional_persona`, `sports_persona`, `arts_persona`, `travel_persona`, `culinary_persona`.", "dataType": "sc:Text"},
-        {"@type": "cr:Field", "@id": "dialogues/style_combination_index", "name": "style_combination_index", "description": "Index into the 24-style CSI factorial (1-24). See `proactbench/styles.py`.", "dataType": "sc:Integer"},
-        {"@type": "cr:Field", "@id": "dialogues/evaluated_model", "name": "evaluated_model", "description": "Identifier of the model whose responses populated the dialogue at curation time (Gemini-2.5-Pro for the released corpus).", "dataType": "sc:Text"},
-        {"@type": "cr:Field", "@id": "dialogues/num_turns_completed", "name": "num_turns_completed", "description": "Number of turns reached before the dialogue terminated. Min 5, max 10.", "dataType": "sc:Integer"},
-        {"@type": "cr:Field", "@id": "dialogues/trigger_points", "name": "trigger_points", "description": "Array of trigger-point records. Each carries the trigger turn index and the rubric (pass/partial/fail criteria authored by the Planner before the model responded). No curation-time judge output is included in the released main corpus; per-model scored outputs (responses, scores, rationales, evidence quotes) live in dataset/eval/.", "dataType": "sc:StructuredValue"},
-        {"@type": "cr:Field", "@id": "dialogues/turn_records", "name": "turn_records", "description": "Array of turn records: planner state, user message, assistant response.", "dataType": "sc:StructuredValue"},
-        {"@type": "cr:Field", "@id": "dialogues/token_usage", "name": "token_usage", "description": "Per-agent token usage (planner, user_agent, assistant).", "dataType": "sc:StructuredValue"}
+        {
+          "@type": "cr:Field",
+          "@id": "dialogues/uuid",
+          "name": "uuid",
+          "description": "Stable identifier for the dialogue.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "final_dialogues_jsonl"
+            },
+            "extract": {
+              "jsonPath": "$.uuid"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "dialogues/unique_id_eval",
+          "name": "unique_id_eval",
+          "description": "Composite unique identifier formatted as `{blueprint_id}__style{style_combination_index}__{uuid}`. Guaranteed unique across the corpus and used as the primary key for joining with offline-evaluation outputs.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "final_dialogues_jsonl"
+            },
+            "extract": {
+              "jsonPath": "$.unique_id_eval"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "dialogues/blueprint_id",
+          "name": "blueprint_id",
+          "description": "Identifier of the blueprint this dialogue was rolled out from (e.g. `BP_PROFESSIONAL_01_EVA`).",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "final_dialogues_jsonl"
+            },
+            "extract": {
+              "jsonPath": "$.blueprint_id"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "dialogues/scenario_id",
+          "name": "scenario_id",
+          "description": "Identifier of the source scenario (e.g. `PROFESSIONAL_01`).",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "final_dialogues_jsonl"
+            },
+            "extract": {
+              "jsonPath": "$.scenario_id"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "dialogues/category_key",
+          "name": "category_key",
+          "description": "Persona category: one of `professional_persona`, `sports_persona`, `arts_persona`, `travel_persona`, `culinary_persona`.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "final_dialogues_jsonl"
+            },
+            "extract": {
+              "jsonPath": "$.category_key"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "dialogues/style_combination_index",
+          "name": "style_combination_index",
+          "description": "Index into the 24-style CSI factorial (1-24). See Appendix C of the paper.",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileObject": {
+              "@id": "final_dialogues_jsonl"
+            },
+            "extract": {
+              "jsonPath": "$.style_combination_index"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "dialogues/evaluated_model",
+          "name": "evaluated_model",
+          "description": "Identifier of the model whose responses populated the dialogue at curation time (Gemini-2.5-Pro for the released corpus).",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "final_dialogues_jsonl"
+            },
+            "extract": {
+              "jsonPath": "$.evaluated_model"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "dialogues/num_turns_completed",
+          "name": "num_turns_completed",
+          "description": "Number of turns reached before the dialogue terminated. Min 5, max 10.",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileObject": {
+              "@id": "final_dialogues_jsonl"
+            },
+            "extract": {
+              "jsonPath": "$.num_turns_completed"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "dialogues/trigger_points",
+          "name": "trigger_points",
+          "description": "JSON-encoded array of trigger-point records. Each carries the trigger turn index and the rubric (pass/partial/fail criteria authored by the Planner before the model responded). No curation-time judge output is included in the released main corpus; per-model scored outputs (responses, scores, rationales, evidence quotes) live in the eval_results FileSet.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "final_dialogues_jsonl"
+            },
+            "extract": {
+              "jsonPath": "$.trigger_points"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "dialogues/turn_records",
+          "name": "turn_records",
+          "description": "JSON-encoded array of turn records: planner state, user message, assistant response.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "final_dialogues_jsonl"
+            },
+            "extract": {
+              "jsonPath": "$.turn_records"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "dialogues/token_usage",
+          "name": "token_usage",
+          "description": "JSON-encoded per-agent token usage (planner, user_agent, assistant).",
+          "dataType": "sc:Text",
+          "source": {
+            "fileObject": {
+              "@id": "final_dialogues_jsonl"
+            },
+            "extract": {
+              "jsonPath": "$.token_usage"
+            }
+          }
+        }
       ]
     },
     {
       "@type": "cr:RecordSet",
       "@id": "human_eval_ratings",
       "name": "human_eval_ratings",
-      "description": "One record per human rating from Prolific Study 1 (275 raw ratings across 18 pseudonymized annotators on 60 stratified trigger points; 258 retained after the pre-registered worker-quality filter).",
+      "description": "One record per human rating from Study 1 (Prolific validation): 275 raw ratings across 18 pseudonymized annotators on 60 stratified trigger points; 258 retained after the pre-registered worker-quality filter.",
       "field": [
-        {"@type": "cr:Field", "@id": "human_eval_ratings/annotator_id", "name": "annotator_id", "description": "Pseudonym (A01-A18); the underlying Prolific worker ID is held internally and not redistributed.", "dataType": "sc:Text"},
-        {"@type": "cr:Field", "@id": "human_eval_ratings/item_id", "name": "item_id", "description": "Stable identifier for the rated trigger; matches `item_id` in human_eval/sample_items.json.", "dataType": "sc:Text"},
-        {"@type": "cr:Field", "@id": "human_eval_ratings/score", "name": "score", "description": "Annotator's score: one of `Pass`, `Partial`, `Fail`.", "dataType": "sc:Text"},
-        {"@type": "cr:Field", "@id": "human_eval_ratings/rationale", "name": "rationale", "description": "Annotator's free-text justification (mandatory).", "dataType": "sc:Text"},
-        {"@type": "cr:Field", "@id": "human_eval_ratings/confidence", "name": "confidence", "description": "Self-reported 1-5 Likert confidence.", "dataType": "sc:Integer"},
-        {"@type": "cr:Field", "@id": "human_eval_ratings/time_spent_seconds", "name": "time_spent_seconds", "description": "Render-to-submit time for this item.", "dataType": "sc:Float"},
-        {"@type": "cr:Field", "@id": "human_eval_ratings/timestamp", "name": "timestamp", "description": "Annotator's local-time submission timestamp (ISO 8601).", "dataType": "sc:Text"},
-        {"@type": "cr:Field", "@id": "human_eval_ratings/server_received_at", "name": "server_received_at", "description": "UTC server-side receipt timestamp (ISO 8601).", "dataType": "sc:Text"}
+        {
+          "@type": "cr:Field",
+          "@id": "human_eval_ratings/annotator_id",
+          "name": "annotator_id",
+          "description": "Pseudonym (A01-A18); the underlying Prolific worker ID is held internally and not redistributed.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "human_eval_results"
+            },
+            "extract": {
+              "jsonPath": "$.annotator_id"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "human_eval_ratings/item_id",
+          "name": "item_id",
+          "description": "Stable identifier for the rated trigger; matches `item_id` in human_eval/sample_items.json.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "human_eval_results"
+            },
+            "extract": {
+              "jsonPath": "$.item_id"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "human_eval_ratings/score",
+          "name": "score",
+          "description": "Annotator's score: one of `Pass`, `Partial`, `Fail`.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "human_eval_results"
+            },
+            "extract": {
+              "jsonPath": "$.score"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "human_eval_ratings/rationale",
+          "name": "rationale",
+          "description": "Annotator's free-text justification (mandatory).",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "human_eval_results"
+            },
+            "extract": {
+              "jsonPath": "$.rationale"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "human_eval_ratings/confidence",
+          "name": "confidence",
+          "description": "Self-reported 1-5 Likert confidence.",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileSet": {
+              "@id": "human_eval_results"
+            },
+            "extract": {
+              "jsonPath": "$.confidence"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "human_eval_ratings/time_spent_seconds",
+          "name": "time_spent_seconds",
+          "description": "Render-to-submit time for this item.",
+          "dataType": "sc:Float",
+          "source": {
+            "fileSet": {
+              "@id": "human_eval_results"
+            },
+            "extract": {
+              "jsonPath": "$.time_spent_seconds"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "human_eval_ratings/timestamp",
+          "name": "timestamp",
+          "description": "Annotator's local-time submission timestamp (ISO 8601).",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "human_eval_results"
+            },
+            "extract": {
+              "jsonPath": "$.timestamp"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "human_eval_ratings/server_received_at",
+          "name": "server_received_at",
+          "description": "UTC server-side receipt timestamp (ISO 8601).",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "human_eval_results"
+            },
+            "extract": {
+              "jsonPath": "$.server_received_at"
+            }
+          }
+        }
       ]
     },
     {
       "@type": "cr:RecordSet",
       "@id": "human_eval_pairwise_ratings",
       "name": "human_eval_pairwise_ratings",
-      "description": "One record per pairwise judgement from Study 2 (146 raw judgements across 8 pseudonymized raters on 80 stratified Recovery items; 144 are non-tie and enter the B-preference statistic, 124 remain after the pre-registered rater-attentiveness filter on median per-item time).",
+      "description": "One record per pairwise judgement from Study 2: 146 raw judgements across 8 pseudonymized raters on 80 stratified Recovery items (144 non-tie comparisons enter the B-preference statistic; 124 remain after the pre-registered rater-attentiveness filter on median per-item time).",
       "field": [
-        {"@type": "cr:Field", "@id": "human_eval_pairwise_ratings/annotator_id", "name": "annotator_id", "description": "Pseudonym (P01-P08); raw Prolific ID held internally and not redistributed.", "dataType": "sc:Text"},
-        {"@type": "cr:Field", "@id": "human_eval_pairwise_ratings/item_id", "name": "item_id", "description": "Stable identifier for the rated item; matches item_id in human_eval/pairwise/sample_items.json.", "dataType": "sc:Text"},
-        {"@type": "cr:Field", "@id": "human_eval_pairwise_ratings/ab_swap", "name": "ab_swap", "description": "Whether Case A and Case B were swapped left/right in the UI to control for side bias.", "dataType": "sc:Boolean"},
-        {"@type": "cr:Field", "@id": "human_eval_pairwise_ratings/choice_side", "name": "choice_side", "description": "Which side the annotator preferred: 'left' or 'right' (or tie equivalent).", "dataType": "sc:Text"},
-        {"@type": "cr:Field", "@id": "human_eval_pairwise_ratings/chosen_case", "name": "chosen_case", "description": "Which Case the annotator preferred after de-swapping: 'A' (vanilla) or 'B' (rubric-conditioned).", "dataType": "sc:Text"},
-        {"@type": "cr:Field", "@id": "human_eval_pairwise_ratings/rationale", "name": "rationale", "description": "Annotator's free-text justification for the choice.", "dataType": "sc:Text"},
-        {"@type": "cr:Field", "@id": "human_eval_pairwise_ratings/confidence", "name": "confidence", "description": "Self-reported 1-5 Likert confidence.", "dataType": "sc:Integer"},
-        {"@type": "cr:Field", "@id": "human_eval_pairwise_ratings/time_spent_seconds", "name": "time_spent_seconds", "description": "Render-to-submit time for this item.", "dataType": "sc:Float"},
-        {"@type": "cr:Field", "@id": "human_eval_pairwise_ratings/timestamp", "name": "timestamp", "description": "Annotator's local-time submission timestamp (ISO 8601).", "dataType": "sc:Text"},
-        {"@type": "cr:Field", "@id": "human_eval_pairwise_ratings/server_received_at", "name": "server_received_at", "description": "UTC server-side receipt timestamp (ISO 8601).", "dataType": "sc:Text"}
+        {
+          "@type": "cr:Field",
+          "@id": "human_eval_pairwise_ratings/annotator_id",
+          "name": "annotator_id",
+          "description": "Pseudonym (P01-P08); raw Prolific ID held internally and not redistributed.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "human_eval_pairwise_results"
+            },
+            "extract": {
+              "jsonPath": "$.annotator_id"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "human_eval_pairwise_ratings/item_id",
+          "name": "item_id",
+          "description": "Stable identifier for the rated item; matches item_id in human_eval/pairwise/sample_items.json.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "human_eval_pairwise_results"
+            },
+            "extract": {
+              "jsonPath": "$.item_id"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "human_eval_pairwise_ratings/ab_swap",
+          "name": "ab_swap",
+          "description": "Whether Case A and Case B were swapped left/right in the UI to control for side bias.",
+          "dataType": "sc:Boolean",
+          "source": {
+            "fileSet": {
+              "@id": "human_eval_pairwise_results"
+            },
+            "extract": {
+              "jsonPath": "$.ab_swap"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "human_eval_pairwise_ratings/choice_side",
+          "name": "choice_side",
+          "description": "Which side the annotator preferred: 'left' or 'right' (or tie equivalent).",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "human_eval_pairwise_results"
+            },
+            "extract": {
+              "jsonPath": "$.choice_side"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "human_eval_pairwise_ratings/chosen_case",
+          "name": "chosen_case",
+          "description": "Which Case the annotator preferred after de-swapping: 'A' (vanilla) or 'B' (rubric-conditioned).",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "human_eval_pairwise_results"
+            },
+            "extract": {
+              "jsonPath": "$.chosen_case"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "human_eval_pairwise_ratings/rationale",
+          "name": "rationale",
+          "description": "Annotator's free-text justification for the choice.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "human_eval_pairwise_results"
+            },
+            "extract": {
+              "jsonPath": "$.rationale"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "human_eval_pairwise_ratings/confidence",
+          "name": "confidence",
+          "description": "Self-reported 1-5 Likert confidence.",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileSet": {
+              "@id": "human_eval_pairwise_results"
+            },
+            "extract": {
+              "jsonPath": "$.confidence"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "human_eval_pairwise_ratings/time_spent_seconds",
+          "name": "time_spent_seconds",
+          "description": "Render-to-submit time for this item.",
+          "dataType": "sc:Float",
+          "source": {
+            "fileSet": {
+              "@id": "human_eval_pairwise_results"
+            },
+            "extract": {
+              "jsonPath": "$.time_spent_seconds"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "human_eval_pairwise_ratings/timestamp",
+          "name": "timestamp",
+          "description": "Annotator's local-time submission timestamp (ISO 8601).",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "human_eval_pairwise_results"
+            },
+            "extract": {
+              "jsonPath": "$.timestamp"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "human_eval_pairwise_ratings/server_received_at",
+          "name": "server_received_at",
+          "description": "UTC server-side receipt timestamp (ISO 8601).",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "human_eval_pairwise_results"
+            },
+            "extract": {
+              "jsonPath": "$.server_received_at"
+            }
+          }
+        }
       ]
     },
     {
@@ -300,19 +706,201 @@
       "name": "eval_records",
       "description": "One record per (evaluated_model, dialogue) pair from the offline-evaluation rerun. Each record contains the model's regenerated assistant responses at each trigger turn, the GPT-5.4 judge's score / rationale / evidence quote, the per-agent token usage, and the original Gemini-2.5-Pro curation response for diff.",
       "field": [
-        {"@type": "cr:Field", "@id": "eval_records/unique_id_eval", "name": "unique_id_eval", "description": "Composite primary key {blueprint_id}__style{N}__{uuid}; matches unique_id_eval in dialogues.", "dataType": "sc:Text"},
-        {"@type": "cr:Field", "@id": "eval_records/blueprint_id", "name": "blueprint_id", "description": "Source-dialogue blueprint identifier.", "dataType": "sc:Text"},
-        {"@type": "cr:Field", "@id": "eval_records/scenario_id", "name": "scenario_id", "description": "Source-scenario identifier.", "dataType": "sc:Text"},
-        {"@type": "cr:Field", "@id": "eval_records/category_key", "name": "category_key", "description": "Persona category.", "dataType": "sc:Text"},
-        {"@type": "cr:Field", "@id": "eval_records/style_combination_index", "name": "style_combination_index", "description": "1-24 CSI style index used for the source dialogue.", "dataType": "sc:Integer"},
-        {"@type": "cr:Field", "@id": "eval_records/evaluated_model", "name": "evaluated_model", "description": "Model under test (matches the filename prefix).", "dataType": "sc:Text"},
-        {"@type": "cr:Field", "@id": "eval_records/source_evaluated_model", "name": "source_evaluated_model", "description": "Model that originally curated the dialogue history (Gemini-2.5-Pro for the released corpus).", "dataType": "sc:Text"},
-        {"@type": "cr:Field", "@id": "eval_records/source_results_path", "name": "source_results_path", "description": "Source dialogue file (relative path within the release).", "dataType": "sc:Text"},
-        {"@type": "cr:Field", "@id": "eval_records/num_trigger_points", "name": "num_trigger_points", "description": "Number of trigger points scored in this dialogue.", "dataType": "sc:Integer"},
-        {"@type": "cr:Field", "@id": "eval_records/trigger_stats", "name": "trigger_stats", "description": "Per-trigger-type Pass / Partial / Fail / Skipped counts.", "dataType": "sc:StructuredValue"},
-        {"@type": "cr:Field", "@id": "eval_records/trigger_points", "name": "trigger_points", "description": "Per-trigger {turn, evaluation_rubric, evaluation_result {status, score, rationale, evidence}}.", "dataType": "sc:StructuredValue"},
-        {"@type": "cr:Field", "@id": "eval_records/turn_records", "name": "turn_records", "description": "Per-turn {turn, user_message, assistant_response, original_assistant_response} for diff against the original curation.", "dataType": "sc:StructuredValue"},
-        {"@type": "cr:Field", "@id": "eval_records/token_usage", "name": "token_usage", "description": "Per-agent (assistant, judge) prompt and completion token counts and call counts.", "dataType": "sc:StructuredValue"}
+        {
+          "@type": "cr:Field",
+          "@id": "eval_records/unique_id_eval",
+          "name": "unique_id_eval",
+          "description": "Composite primary key {blueprint_id}__style{N}__{uuid}; matches unique_id_eval in dialogues.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "eval_results"
+            },
+            "extract": {
+              "jsonPath": "$.unique_id_eval"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "eval_records/blueprint_id",
+          "name": "blueprint_id",
+          "description": "Source-dialogue blueprint identifier.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "eval_results"
+            },
+            "extract": {
+              "jsonPath": "$.blueprint_id"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "eval_records/scenario_id",
+          "name": "scenario_id",
+          "description": "Source-scenario identifier.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "eval_results"
+            },
+            "extract": {
+              "jsonPath": "$.scenario_id"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "eval_records/category_key",
+          "name": "category_key",
+          "description": "Persona category.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "eval_results"
+            },
+            "extract": {
+              "jsonPath": "$.category_key"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "eval_records/style_combination_index",
+          "name": "style_combination_index",
+          "description": "1-24 CSI style index used for the source dialogue.",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileSet": {
+              "@id": "eval_results"
+            },
+            "extract": {
+              "jsonPath": "$.style_combination_index"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "eval_records/evaluated_model",
+          "name": "evaluated_model",
+          "description": "Model under test (matches the filename prefix).",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "eval_results"
+            },
+            "extract": {
+              "jsonPath": "$.evaluated_model"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "eval_records/source_evaluated_model",
+          "name": "source_evaluated_model",
+          "description": "Model that originally curated the dialogue history (Gemini-2.5-Pro for the released corpus).",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "eval_results"
+            },
+            "extract": {
+              "jsonPath": "$.source_evaluated_model"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "eval_records/source_results_path",
+          "name": "source_results_path",
+          "description": "Source dialogue file (relative path within the release).",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "eval_results"
+            },
+            "extract": {
+              "jsonPath": "$.source_results_path"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "eval_records/num_trigger_points",
+          "name": "num_trigger_points",
+          "description": "Number of trigger points scored in this dialogue.",
+          "dataType": "sc:Integer",
+          "source": {
+            "fileSet": {
+              "@id": "eval_results"
+            },
+            "extract": {
+              "jsonPath": "$.num_trigger_points"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "eval_records/trigger_stats",
+          "name": "trigger_stats",
+          "description": "JSON-encoded per-trigger-type Pass / Partial / Fail / Skipped counts.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "eval_results"
+            },
+            "extract": {
+              "jsonPath": "$.trigger_stats"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "eval_records/trigger_points",
+          "name": "trigger_points",
+          "description": "JSON-encoded per-trigger {turn, evaluation_rubric, evaluation_result {status, score, rationale, evidence}}.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "eval_results"
+            },
+            "extract": {
+              "jsonPath": "$.trigger_points"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "eval_records/turn_records",
+          "name": "turn_records",
+          "description": "JSON-encoded per-turn {turn, user_message, assistant_response, original_assistant_response} for diff against the original curation.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "eval_results"
+            },
+            "extract": {
+              "jsonPath": "$.turn_records"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "eval_records/token_usage",
+          "name": "token_usage",
+          "description": "JSON-encoded per-agent (assistant, judge) prompt and completion token counts and call counts.",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "eval_results"
+            },
+            "extract": {
+              "jsonPath": "$.token_usage"
+            }
+          }
+        }
       ]
     }
   ]

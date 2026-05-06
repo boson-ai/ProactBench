@@ -1,45 +1,13 @@
 """Pydantic models for ProactBench.
 
-Grouped into three sections:
-
-  * Runtime types used by the Planner / User-Agent / evaluation loop.
-  * Synthesis types used when generating proactive scenarios and blueprints.
-  * Validation types used by the independent-judge blueprint audit.
+Runtime types used by the Planner / User-Agent / evaluation loop.
 """
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from typing import Optional, Union
 
 from pydantic import BaseModel, model_validator
-
-
-# ═════════════════════════════════════════════════════════════════════════════
-# PROMPT PLUMBING
-# ═════════════════════════════════════════════════════════════════════════════
-
-@dataclass
-class PromptPair:
-    """A system/user prompt pair ready for a chat-completions call."""
-    system: str
-    user: str
-
-    def to_list(self) -> list[dict]:
-        return [
-            {"role": "system", "content": self.system},
-            {"role": "user", "content": self.user},
-        ]
-
-
-class PromptConfig(ABC):
-    """Abstract base for per-stage prompt configs (scenario / blueprint /
-    validation). Subclasses implement ``format`` to produce a ``PromptPair``."""
-
-    @abstractmethod
-    def format(self, *args, **kwargs) -> PromptPair:
-        ...
 
 
 # ═════════════════════════════════════════════════════════════════════════════
