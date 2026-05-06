@@ -108,15 +108,19 @@ proactbench/
 ├── evaluation.py           # Evaluation loop: rerun a model at trigger points + judge
 └── prompts/
     ├── __init__.py
-    └── runtime.py          # User Agent / judge system prompts and message builders
+    ├── runtime.py          # User Agent / judge system prompts and message builders
+    └── synthesis.py        # Verbatim synthesis-stage prompts (scenario / blueprint /
+                            #   validation) used to produce the released corpus
 ```
 
-The released code includes only the **evaluation** pipeline. The synthesis
-pipeline that produced the released `dataset/` artefacts (personas → scenarios
-→ blueprints → validated blueprints → dialogues) is documented in the paper's
-appendix and the dataset's [DATASHEET.md](dataset/DATASHEET.md), but the
-generation code is not redistributed; the released corpus in `dataset/` is the
-canonical artefact.
+The released code includes the **evaluation** pipeline plus the **verbatim
+synthesis-stage prompts** that produced the released `dataset/` artefacts. The
+synthesis runner scripts themselves (which orchestrate persona iteration,
+parallel API calls, and JSONL writes for the four-stage corpus generation)
+are not redistributed — the released corpus in `dataset/` is the canonical
+artefact, and `proactbench/prompts/synthesis.py` makes the prompt provenance
+inspectable. The synthesis pipeline is described in the paper's appendix and
+in [DATASHEET.md](dataset/DATASHEET.md).
 
 ## Evaluation
 
