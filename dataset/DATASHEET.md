@@ -226,7 +226,7 @@ added without breaking existing dialogues.
 
 ```bibtex
 @inproceedings{anonymous2026proactbench,
-  title={ProactBench: What the User Didn't Ask},
+  title={ProactBench: Beyond What The User Asked For},
   author={Anonymous},
   booktitle={Under review at NeurIPS 2026},
   year={2026}

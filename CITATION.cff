@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use ProactBench, please cite the work below."
-title: "ProactBench: What the User Didn't Ask"
+title: "ProactBench: Beyond What The User Asked For"
 version: "1.0.0"
 date-released: "2026-04-28"
 license: Apache-2.0
@@ -26,7 +26,7 @@ keywords:
   - evaluation
 preferred-citation:
   type: conference-paper
-  title: "ProactBench: What the User Didn't Ask"
+  title: "ProactBench: Beyond What The User Asked For"
   authors:
     - name: "Anonymous"
   collection-title: "Under review at NeurIPS 2026 (Datasets and Benchmarks)"

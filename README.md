@@ -1,7 +1,7 @@
 # ProactBench
 
 Benchmark code and data-generation pipeline for
-**ProactBench: What the User Didn't Ask** — measuring conversational
+**ProactBench: Beyond What The User Asked For** — measuring conversational
 proactivity in multi-turn LLM dialogues.
 
 The benchmark decomposes proactivity into three phase-tied types —
@@ -181,7 +181,7 @@ Pydantic schemas for all of the above live in [`proactbench/types.py`](proactben
 
 ```bibtex
 @inproceedings{anonymous2026proactbench,
-  title={ProactBench: What the User Didn't Ask},
+  title={ProactBench: Beyond What The User Asked For},
   author={Anonymous},
   booktitle={Under review at NeurIPS 2026 (Datasets and Benchmarks)},
   year={2026}
