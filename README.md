@@ -22,7 +22,7 @@ The released benchmark lives in [`dataset/`](dataset/):
 | `validation_results.jsonl` | 250 | Independent-judge audit decisions. |
 | `tasks.jsonl` | 50 | Per-persona scenarios (Stage 1 output). |
 | `selected_tasks.jsonl` | 19 | Curated subset of `tasks.jsonl` — 19 personas containing 25 scenarios that fed Stage 2 blueprint generation. |
-| [`human_eval/`](dataset/human_eval/) | 18 raters / 275 ratings / 60 items | Human-validation study results (Prolific, pseudonymized). Per-annotator rating files, the 60-item stratified subsample, annotator briefing, instructions, and the analysis script that reproduces Krippendorff's $\alpha$ and Cohen's $\kappa_{\text{quad}}$ from the paper. |
+| [`human_eval/`](dataset/human_eval/) | Study 1: 18 raters / 275 ratings / 60 items.<br>Study 2: 8 raters / 146 ratings / 80 items | Two Prolific human-validation studies (pseudonymized). **Study 1 — judge calibration** (root): per-annotator direct ratings on a stratified 60-item subsample of trigger points, validating the GPT-5.4 judge (Krippendorff's $\alpha$, Cohen's $\kappa_{\text{quad}}$). **Study 2 — pairwise rubric injection** ([`human_eval/pairwise/`](dataset/human_eval/pairwise/)): forced-choice between vanilla and rubric-conditioned Recovery responses on 80 items. |
 | [`eval/`](dataset/eval/) | 16 models × (198 dialogues + metrics) | Per-model evaluation outputs: full assistant responses regenerated at each trigger turn, judge scores with rationales and evidence quotes, plus aggregate metrics. The raw inputs that feed every per-model number, ranking, and ablation in the paper. ~65 MB total. |
 
 The dataset ships with [Croissant 1.0](http://mlcommons.org/croissant/)

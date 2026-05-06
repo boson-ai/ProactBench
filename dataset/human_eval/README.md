@@ -1,12 +1,19 @@
 # Human-validation study results
 
-This directory contains the human-rater data from the Prolific human-validation
-study described in the paper (Section: Human annotation; Appendix: Human
-calibration). The study validates the **GPT-5.4 offline judge** against
-independent human raters on a stratified 60-item subsample of ProactBench
-trigger points.
+This directory contains the human-rater data from **two** Prolific human studies
+described in the paper.
 
-## What's here
+**Study 1 — judge calibration (direct rating, files at the root of this
+directory):** validates the **GPT-5.4 offline judge** against independent
+human raters on a stratified 60-item subsample of ProactBench trigger points.
+
+**Study 2 — pairwise rubric-injection comparison ([`pairwise/`](pairwise/)):**
+forced-choice between vanilla Recovery responses (Case A) and rubric-conditioned
+Recovery responses (Case B) on 80 stratified Recovery items, judged by 8
+independent annotators. See [`pairwise/README.md`](pairwise/README.md) for the
+full design.
+
+## What's here (Study 1)
 
 | Path | Description |
 |---|---|
