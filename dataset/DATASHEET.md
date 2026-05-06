@@ -112,7 +112,7 @@ February through April 2026.
 
 **Were any ethical review processes conducted?**
 The benchmark contains no real-user data; no human-subjects review was
-required for dataset creation. The planned human-validation study (Section 5
+required for dataset creation. The human-validation study (Section 5
 and Appendix N of the paper) is conducted under an IRB-approved protocol.
 
 ## Preprocessing
