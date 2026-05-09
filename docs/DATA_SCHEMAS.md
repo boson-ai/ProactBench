@@ -4,7 +4,10 @@ ProactBench distributes one JSONL artefact and the offline-evaluation
 pipeline writes one. Both are documented here. The Pydantic source of truth
 lives in [`proactbench/types.py`](../proactbench/types.py).
 
-## `dataset/final_dialogues.jsonl` — the released benchmark corpus
+## `final_dialogues.jsonl` — the released benchmark corpus
+
+Hosted on HuggingFace at
+[`bosonai/proactbench`](https://huggingface.co/datasets/bosonai/proactbench).
 
 198 rows; one per curated dialogue. Each row carries:
 
@@ -31,10 +34,19 @@ lives in [`proactbench/types.py`](../proactbench/types.py).
     ...
   ],
   "turn_records": [
-    {"turn": 1, "user_message": "...", "assistant_response": "...", ...},
+    {
+      "turn": 1,
+      "planner": { ... },
+      "user_message": "...",
+      "assistant_response": "..."
+    },
     ...
   ],
-  "token_usage": { ... }
+  "token_usage": {
+    "planner":    {"prompt_tokens": ..., "completion_tokens": ..., "calls": ...},
+    "user_agent": {"prompt_tokens": ..., "completion_tokens": ..., "calls": ...},
+    "assistant":  {"prompt_tokens": 0, "completion_tokens": 0, "calls": 0}
+  }
 }
 ```
 
@@ -52,8 +64,8 @@ lives in [`proactbench/types.py`](../proactbench/types.py).
 | `num_turns_completed` | int | 5–10. Minimum enforced by the curation loop. |
 | `trigger_points` | array | One entry per trigger turn. Each entry has only `turn` (1-indexed) and `evaluation_rubric`. **No curation-time judge label is included.** Per-(model, trigger) labels are produced at run time by the offline judge in [`proactbench/evaluation.py`](../proactbench/evaluation.py). |
 | `trigger_points[i].evaluation_rubric` | object | `{type, pass_criteria, partial_criteria, fail_criteria}`, authored prospectively by the Planner before the assistant responded. `type` ∈ {`EMERGENT`, `CRITICAL`, `RECOVERY`}. |
-| `turn_records` | array | Per-turn record: `{turn, user_message, assistant_response, ...}`. May carry curation-time orchestration fields (planner state, evaluator notes); the offline pipeline ignores them. |
-| `token_usage` | object | Per-agent prompt / completion token counts from the curation run. Informational only; the offline pipeline writes its own usage block in the output. |
+| `turn_records` | array | Per-turn record. Each entry has `turn`, `user_message`, `assistant_response`, plus a `planner` sub-object capturing the curation-time Planner's state at that turn. The offline pipeline reads only `turn` / `user_message` / `assistant_response`; the `planner` block is preserved for inspection but otherwise ignored. |
+| `token_usage` | object | Per-agent (`planner`, `user_agent`, `assistant`) prompt / completion / call counts from the curation run. Informational only; the offline pipeline writes its own `assistant` + `judge` block in the output. (Note: in the released corpus the curation `assistant` counts are zero because the curation-time evaluated model was tracked separately.) |
 
 The Pydantic models that the offline pipeline parses these against are
 `EvaluationRubric` and `TriggerPoint` in

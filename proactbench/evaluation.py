@@ -1,12 +1,13 @@
 """ProactBench evaluation: rerun the evaluated model at each trigger point in
 a curated dialogue, then score with a judge.
 
-Reads dialogues from ``dataset/final_dialogues.jsonl`` (each carrying the
-Planner-authored rubric per trigger but no curation-time judge labels), uses
-the full conversation history up to each trigger turn as the context,
-regenerates the assistant response from the model under evaluation, and has
-the judge apply the original rubric. The judge operates in neutral mode:
-persona and style are not exposed at scoring time."""
+Loads dialogues from the HuggingFace dataset ``bosonai/proactbench`` by
+default (a local JSONL path can be supplied to override). Each dialogue
+carries the Planner-authored rubric per trigger but no curation-time judge
+labels. The pipeline uses the full conversation history up to each trigger
+turn as context, regenerates the assistant response from the model under
+evaluation, and has the judge apply the original rubric. The judge operates
+in neutral mode: persona and style are not exposed at scoring time."""
 
 from __future__ import annotations
 
@@ -43,7 +44,28 @@ def _sanitize_gen_config(gen_config: dict, model_name: str) -> dict:
 
 # ── I/O helpers ───────────────────────────────────────────────────────────────
 
-def load_dialogues(path: Path) -> list[dict]:
+DEFAULT_HF_REPO = "bosonai/proactbench"
+DEFAULT_HF_FILE = "final_dialogues.jsonl"
+
+
+def load_dialogues(path: Optional[Path] = None) -> list[dict]:
+    """Load the benchmark corpus.
+
+    With ``path=None`` (the default), downloads ``final_dialogues.jsonl`` from
+    the canonical HuggingFace dataset (``bosonai/proactbench``) via
+    ``huggingface_hub.hf_hub_download``. The file is cached locally on first
+    fetch and reused on subsequent runs.
+
+    Pass an explicit ``path`` to load a local JSONL file instead (useful for
+    testing against a modified or subset corpus).
+    """
+    if path is None:
+        from huggingface_hub import hf_hub_download
+        path = hf_hub_download(
+            repo_id=DEFAULT_HF_REPO,
+            filename=DEFAULT_HF_FILE,
+            repo_type="dataset",
+        )
     rows: list[dict] = []
     with open(path) as f:
         for line in f:
@@ -213,9 +235,9 @@ def run_dialogue_eval(
 # ── Batch driver ──────────────────────────────────────────────────────────────
 
 def run_eval(
-    results_path: Path,
     output_path: Path,
     eval_model: str,
+    results_path: Optional[Path] = None,
     judge_model: str = "gpt-5.4",
     num_threads: int = 4,
     num_samples: Optional[int] = None,
@@ -226,7 +248,11 @@ def run_eval(
     judge_base_url: Optional[str] = None,
     gemini_think_budget: Optional[int] = None,
 ):
-    """Rescore every dialogue in ``results_path`` against a new evaluated model.
+    """Rescore every dialogue in the corpus against a new evaluated model.
+
+    With ``results_path=None`` (the default), the canonical corpus is fetched
+    from the HuggingFace dataset ``bosonai/proactbench``. Pass an explicit
+    path to use a local JSONL file instead.
 
     One JSONL record per dialogue is written to ``output_path``.
     """
@@ -266,7 +292,10 @@ def run_eval(
 def _main():
     import argparse
     ap = argparse.ArgumentParser(description=run_eval.__doc__)
-    ap.add_argument("--results-path", required=True, type=Path)
+    ap.add_argument("--results-path", type=Path, default=None,
+                    help="Local JSONL path. If omitted, downloads "
+                         f"{DEFAULT_HF_FILE} from the HF dataset "
+                         f"{DEFAULT_HF_REPO}.")
     ap.add_argument("--output-path", required=True, type=Path)
     ap.add_argument("--eval-model", required=True)
     ap.add_argument("--judge-model", default="gpt-5.4")

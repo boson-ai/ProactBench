@@ -1,8 +1,9 @@
 """End-to-end smoke test for the evaluation pipeline.
 
-Reads the first 2 dialogues from ``dataset/final_dialogues.jsonl``, reruns
-them with a cheap evaluated model and a cheap judge model, and verifies the
-output JSONL has the expected per-dialogue records with trigger-point scores.
+Downloads the first 2 dialogues from the canonical HuggingFace dataset
+(``bosonai/proactbench``), reruns them with a cheap evaluated model and a
+cheap judge model, and verifies the output JSONL has the expected
+per-dialogue records with trigger-point scores.
 
 Usage:
 
@@ -56,28 +57,18 @@ def main() -> int:
         print("[smoke] OPENAI_API_KEY not set", flush=True)
         return 1
 
-    src = ROOT / "dataset" / "final_dialogues.jsonl"
-    if not src.exists():
-        print(f"[smoke] missing {src}", flush=True)
-        return 1
-
     tmp = Path(tempfile.mkdtemp(prefix="proactbench_smoke_"))
     try:
-        # Subsample for cheap test
-        subset = tmp / "dialogues_subset.jsonl"
-        rows = src.read_text().splitlines()[: args.num_samples]
-        subset.write_text("\n".join(r for r in rows if r.strip()) + "\n")
-        _log(f"sub-sample: {args.num_samples} dialogues -> {subset}")
-
-        # Run eval
         out = tmp / "eval_out.jsonl"
-        _log(f"running eval: eval={args.eval_model} judge={args.judge_model}")
+        _log(f"running eval: eval={args.eval_model} judge={args.judge_model}, "
+             f"first {args.num_samples} dialogues from HF (bosonai/proactbench)")
         try:
+            # results_path=None → fetch from the canonical HF dataset.
             run_eval(
-                results_path=subset,
                 output_path=out,
                 eval_model=args.eval_model,
                 judge_model=args.judge_model,
+                num_samples=args.num_samples,
                 num_threads=args.threads,
             )
         except Exception as e:
