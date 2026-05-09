@@ -6,7 +6,22 @@ date-released: "2026-04-28"
 license: Apache-2.0
 type: dataset
 authors:
-  - name: "Anonymous (under double-blind review at NeurIPS 2026)"
+  - family-names: "Harfi"
+    given-names: "Sepehr"
+    affiliation: "Boson AI"
+  - family-names: "Salimi"
+    given-names: "Ahmad"
+    affiliation: "Boson AI"
+  - family-names: "Shen"
+    given-names: "Dongming"
+    affiliation: "Boson AI"
+  - family-names: "Smola"
+    given-names: "Alex"
+    affiliation: "Boson AI"
+  - name: "Boson AI"
+notes: >
+  An arXiv preprint is in preparation; this CITATION.cff will be updated
+  with the arXiv identifier and final venue information once available.
 abstract: >
   ProactBench is a benchmark for measuring conversational proactivity in
   multi-turn LLM dialogues. It decomposes proactivity into three phase-tied
@@ -25,9 +40,21 @@ keywords:
   - multi-turn dialogue
   - evaluation
 preferred-citation:
-  type: conference-paper
+  type: article
   title: "ProactBench: Beyond What The User Asked For"
   authors:
-    - name: "Anonymous"
-  collection-title: "Under review at NeurIPS 2026 (Datasets and Benchmarks)"
+    - family-names: "Harfi"
+      given-names: "Sepehr"
+      affiliation: "Boson AI"
+    - family-names: "Salimi"
+      given-names: "Ahmad"
+      affiliation: "Boson AI"
+    - family-names: "Shen"
+      given-names: "Dongming"
+      affiliation: "Boson AI"
+    - family-names: "Smola"
+      given-names: "Alex"
+      affiliation: "Boson AI"
+    - name: "Boson AI"
   year: 2026
+  notes: "arXiv preprint forthcoming; identifier will be added on release."
