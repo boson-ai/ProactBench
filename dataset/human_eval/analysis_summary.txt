@@ -1,0 +1,76 @@
+======================================================================
+Proactivity Bench — Human Annotation Analysis
+======================================================================
+Loaded 60 items from sample
+Loaded 275 ratings from 18 annotator file(s)
+
+=== Coverage ===
+  total_items: 60
+  items_with_3_ratings: 8
+  items_with_2_ratings: 5
+  items_with_1_rating: 9
+  items_with_0_ratings: 1
+  total_ratings: 275
+
+=== Per-annotator stats ===
+  annotator A01: n=  2  mean_time=607.0s  mean_conf=3.50  pass/partial/fail = 0.00/0.50/0.50
+  annotator A02: n= 17  mean_time=317.8s  mean_conf=4.35  pass/partial/fail = 0.71/0.12/0.18
+  annotator A03: n= 17  mean_time=241.2s  mean_conf=3.29  pass/partial/fail = 0.12/0.41/0.47
+  annotator A04: n= 17  mean_time=200.4s  mean_conf=4.47  pass/partial/fail = 0.41/0.41/0.18
+  annotator A05: n=  1  mean_time=377.0s  mean_conf=5.00  pass/partial/fail = 0.00/0.00/1.00
+  annotator A06: n= 17  mean_time=347.2s  mean_conf=4.59  pass/partial/fail = 0.47/0.29/0.24
+  annotator A07: n= 17  mean_time=376.9s  mean_conf=4.41  pass/partial/fail = 0.59/0.35/0.06
+  annotator A08: n= 17  mean_time=131.5s  mean_conf=4.76  pass/partial/fail = 0.53/0.35/0.12
+  annotator A09: n= 17  mean_time=312.1s  mean_conf=4.41  pass/partial/fail = 0.59/0.29/0.12
+  annotator A10: n= 17  mean_time=161.6s  mean_conf=4.65  pass/partial/fail = 0.53/0.18/0.29
+  annotator A11: n= 17  mean_time=414.7s  mean_conf=4.24  pass/partial/fail = 0.41/0.35/0.24
+  annotator A12: n= 17  mean_time=332.6s  mean_conf=4.12  pass/partial/fail = 0.35/0.06/0.59
+  annotator A13: n= 17  mean_time=228.1s  mean_conf=3.59  pass/partial/fail = 0.59/0.24/0.18
+  annotator A14: n= 17  mean_time=188.2s  mean_conf=3.71  pass/partial/fail = 0.47/0.18/0.35
+  annotator A15: n= 17  mean_time=357.9s  mean_conf=4.94  pass/partial/fail = 0.76/0.12/0.12
+  annotator A16: n= 17  mean_time=254.1s  mean_conf=4.53  pass/partial/fail = 0.47/0.24/0.29
+  annotator A17: n= 17  mean_time=372.4s  mean_conf=3.41  pass/partial/fail = 0.53/0.29/0.18
+  annotator A18: n= 17  mean_time=453.8s  mean_conf=4.06  pass/partial/fail = 0.35/0.24/0.41
+
+=== Agreement-level distribution (per item) ===
+  all_3_agree: 7
+  2_agree_1_differ: 4
+  only_1_rating: 9
+  2_agree_only_2_ratings: 2
+  2_differ_only_2_ratings: 3
+  all_differ: 1
+
+=== Krippendorff's alpha (ordinal) + Cohen's kappa (consensus vs judge) per trigger type ===
+  EMERGENT:
+    n_items=20, n_ratings=83
+    Krippendorff alpha (ordinal): 0.170 [-0.052, 0.339]
+    Cohen's kappa (consensus vs judge): 0.545 [0.257, 0.835]
+    Confusion matrix (rows=human_consensus, cols=judge):
+      Fail     |    3    1    0
+      Partial  |    1    4    0
+      Pass     |    2    2    7
+                        Fail  Partial  Pass
+    -> saved confusion_matrix_emergent.csv
+
+  CRITICAL:
+    n_items=19, n_ratings=83
+    Krippendorff alpha (ordinal): 0.158 [-0.028, 0.287]
+    Cohen's kappa (consensus vs judge): 0.269 [-0.025, 0.556]
+    Confusion matrix (rows=human_consensus, cols=judge):
+      Fail     |    4    1    0
+      Partial  |    0    0    1
+      Pass     |    2    5    6
+                        Fail  Partial  Pass
+    -> saved confusion_matrix_critical.csv
+
+  RECOVERY:
+    n_items=20, n_ratings=109
+    Krippendorff alpha (ordinal): 0.278 [0.049, 0.447]
+    Cohen's kappa (consensus vs judge): 0.552 [0.228, 0.841]
+    Confusion matrix (rows=human_consensus, cols=judge):
+      Fail     |    6    2    0
+      Partial  |    0    4    3
+      Pass     |    0    1    4
+                        Fail  Partial  Pass
+    -> saved confusion_matrix_recovery.csv
+
