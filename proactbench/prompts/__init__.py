@@ -1,11 +1,13 @@
-"""Prompt templates for the runtime agents (User Agent / judge)."""
+"""Prompt templates and message builders for the judge."""
 
 from .runtime import (
-    USER_AGENT_SYSTEM_TEMPLATE,
-    build_user_agent_eval_message,
+    JUDGE_SYSTEM_TEMPLATE,
+    build_judge_eval_message,
+    format_dialogue_history,
 )
 
 __all__ = [
-    "USER_AGENT_SYSTEM_TEMPLATE",
-    "build_user_agent_eval_message",
+    "JUDGE_SYSTEM_TEMPLATE",
+    "build_judge_eval_message",
+    "format_dialogue_history",
 ]

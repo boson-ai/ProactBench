@@ -19,8 +19,8 @@ from typing import Optional
 from tqdm import tqdm
 
 from .clients import _is_openai_reasoning, make_client
-from .prompts import USER_AGENT_SYSTEM_TEMPLATE, build_user_agent_eval_message
-from .types import EvaluationRubric, TriggerPoint, UserAgentOutput
+from .prompts import JUDGE_SYSTEM_TEMPLATE, build_judge_eval_message
+from .types import EvaluationRubric, JudgeOutput, TriggerPoint
 
 
 # ── Generation configs ────────────────────────────────────────────────────────
@@ -28,9 +28,6 @@ from .types import EvaluationRubric, TriggerPoint, UserAgentOutput
 JUDGE_GEN_CONFIG = dict(temperature=0.7, max_new_tokens=32768, top_p=1.0,
                         reasoning_effort="medium")
 EVAL_MODEL_GEN_CONFIG = dict(temperature=0.7, max_new_tokens=8192, top_p=1.0)
-
-_NEUTRAL_JUDGE_PERSONA = "(Neutral evaluation mode — no persona context available.)"
-_NEUTRAL_JUDGE_STYLE = "(Not applicable — no user message generation required.)"
 
 
 def _sanitize_gen_config(gen_config: dict, model_name: str) -> dict:
@@ -103,13 +100,13 @@ def _call_eval_model(history: list[dict], user_message: str,
 
 def _call_judge(trigger: TriggerPoint, history_including_response: list[dict],
                 client, model: str, system: str, gen_config: dict):
-    user = build_user_agent_eval_message(trigger, history_including_response)
+    user = build_judge_eval_message(trigger, history_including_response)
     try:
         result = client.chat_structured(
             model=model,
             messages=[{"role": "user", "content": user}],
             system=system,
-            response_format=UserAgentOutput,
+            response_format=JudgeOutput,
             return_usage=True,
             **gen_config,
         )
@@ -247,9 +244,7 @@ def run_eval(
     eval_gen = _sanitize_gen_config(dict(eval_gen_config or EVAL_MODEL_GEN_CONFIG), eval_model)
     judge_gen = _sanitize_gen_config(dict(judge_gen_config or JUDGE_GEN_CONFIG), judge_model)
 
-    judge_system = USER_AGENT_SYSTEM_TEMPLATE.format(
-        persona=_NEUTRAL_JUDGE_PERSONA, style=_NEUTRAL_JUDGE_STYLE,
-    )
+    judge_system = JUDGE_SYSTEM_TEMPLATE
 
     worker = partial(
         run_dialogue_eval,
