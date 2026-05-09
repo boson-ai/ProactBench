@@ -1,6 +1,6 @@
 """End-to-end smoke test for the evaluation pipeline.
 
-Reads the first 2 dialogues from ``release/final_dialogues.jsonl``, reruns
+Reads the first 2 dialogues from ``dataset/final_dialogues.jsonl``, reruns
 them with a cheap evaluated model and a cheap judge model, and verifies the
 output JSONL has the expected per-dialogue records with trigger-point scores.
 
@@ -56,7 +56,7 @@ def main() -> int:
         print("[smoke] OPENAI_API_KEY not set", flush=True)
         return 1
 
-    src = ROOT / "release" / "final_dialogues.jsonl"
+    src = ROOT / "dataset" / "final_dialogues.jsonl"
     if not src.exists():
         print(f"[smoke] missing {src}", flush=True)
         return 1
