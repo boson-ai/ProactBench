@@ -194,11 +194,12 @@ weighted score; pass rate counts only `PASS`.
 ## Citation
 
 ```bibtex
-@inproceedings{anonymous2026proactbench,
-  title={ProactBench: Beyond What The User Asked For},
-  author={Anonymous},
-  booktitle={Under review at NeurIPS 2026 (Datasets and Benchmarks)},
-  year={2026}
+@article{harfi2026proactbench,
+  title   = {ProactBench: Beyond What The User Asked For},
+  author  = {Harfi, Sepehr and Salimi, Ahmad and Shen, Dongming and Smola, Alex},
+  journal = {arXiv preprint arXiv:2605.09228},
+  year    = {2026},
+  url     = {https://arxiv.org/abs/2605.09228}
 }
 ```
 
