@@ -194,12 +194,14 @@ weighted score; pass rate counts only `PASS`.
 ## Citation
 
 ```bibtex
-@article{harfi2026proactbench,
-  title   = {ProactBench: Beyond What The User Asked For},
-  author  = {Harfi, Sepehr and Salimi, Ahmad and Shen, Dongming and Smola, Alex},
-  journal = {arXiv preprint arXiv:2605.09228},
-  year    = {2026},
-  url     = {https://arxiv.org/abs/2605.09228}
+@misc{harfi2026proactbenchuserasked,
+      title={ProactBench: Beyond What The User Asked For}, 
+      author={Sepehr Harfi and Ahmad Salimi and Dongming Shen and Alex Smola},
+      year={2026},
+      eprint={2605.09228},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2605.09228}, 
 }
 ```
 
