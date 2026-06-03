@@ -205,8 +205,6 @@ weighted score; pass rate counts only `PASS`.
 }
 ```
 
-(BibTeX will be updated with author and venue details on acceptance.)
-
 ## Licence
 
 Apache 2.0 — see [LICENSE](LICENSE). Persona-derived content inherits the
