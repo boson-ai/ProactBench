@@ -20,7 +20,7 @@ authors:
     affiliation: "Boson AI"
   - name: "Boson AI"
 notes: >
-  Accepted at NeurIPS 2026 (Datasets and Benchmarks track).
+  Accepted at NeurIPS 2026 (Evaluations and Datasets track).
   Preprint: https://arxiv.org/abs/2605.09228
 abstract: >
   ProactBench is a benchmark for measuring conversational proactivity in
@@ -42,7 +42,7 @@ keywords:
 preferred-citation:
   type: conference-paper
   conference:
-    name: "Advances in Neural Information Processing Systems (NeurIPS), Datasets and Benchmarks Track"
+    name: "Advances in Neural Information Processing Systems (NeurIPS), Evaluations and Datasets Track"
   collection-title: "Advances in Neural Information Processing Systems"
   url: "https://arxiv.org/abs/2605.09228"
   title: "ProactBench: Beyond What The User Asked For"

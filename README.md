@@ -3,7 +3,7 @@
 Code and data for **ProactBench: Beyond What The User Asked For** — measuring
 conversational proactivity in multi-turn LLM dialogues.
 
-> **Accepted at NeurIPS 2026 (Datasets & Benchmarks track).**
+> **Accepted at NeurIPS 2026 (Evaluations & Datasets track).**
 > Paper: [arXiv:2605.09228](https://arxiv.org/abs/2605.09228) ·
 > Dataset: [`bosonai/proactbench`](https://huggingface.co/datasets/bosonai/proactbench)
 
@@ -201,7 +201,7 @@ weighted score; pass rate counts only `PASS`.
 @inproceedings{harfimoridani2026proactbench,
   title     = {ProactBench: Beyond What The User Asked For},
   author    = {Harfi Moridani, Sepehr and Salimi, Ahmad and Shen, Dongming and Smola, Alex},
-  booktitle = {Advances in Neural Information Processing Systems (NeurIPS), Datasets and Benchmarks Track},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS), Evaluations and Datasets Track},
   year      = {2026},
   eprint    = {2605.09228},
   archivePrefix = {arXiv},
