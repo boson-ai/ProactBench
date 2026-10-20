@@ -1,12 +1,12 @@
 cff-version: 1.2.0
 message: "If you use ProactBench, please cite the work below."
 title: "ProactBench: Beyond What The User Asked For"
-version: "1.0.0"
-date-released: "2026-04-28"
+version: "1.1.0"
+date-released: "2026-10-20"
 license: Apache-2.0
 type: dataset
 authors:
-  - family-names: "Harfi"
+  - family-names: "Harfi Moridani"
     given-names: "Sepehr"
     affiliation: "Boson AI"
   - family-names: "Salimi"
@@ -20,8 +20,8 @@ authors:
     affiliation: "Boson AI"
   - name: "Boson AI"
 notes: >
-  An arXiv preprint is in preparation; this CITATION.cff will be updated
-  with the arXiv identifier and final venue information once available.
+  Accepted at NeurIPS 2026 (Datasets and Benchmarks track).
+  Preprint: https://arxiv.org/abs/2605.09228
 abstract: >
   ProactBench is a benchmark for measuring conversational proactivity in
   multi-turn LLM dialogues. It decomposes proactivity into three phase-tied
@@ -40,10 +40,14 @@ keywords:
   - multi-turn dialogue
   - evaluation
 preferred-citation:
-  type: article
+  type: conference-paper
+  conference:
+    name: "Advances in Neural Information Processing Systems (NeurIPS), Datasets and Benchmarks Track"
+  collection-title: "Advances in Neural Information Processing Systems"
+  url: "https://arxiv.org/abs/2605.09228"
   title: "ProactBench: Beyond What The User Asked For"
   authors:
-    - family-names: "Harfi"
+    - family-names: "Harfi Moridani"
       given-names: "Sepehr"
       affiliation: "Boson AI"
     - family-names: "Salimi"
@@ -57,4 +61,4 @@ preferred-citation:
       affiliation: "Boson AI"
     - name: "Boson AI"
   year: 2026
-  notes: "arXiv preprint forthcoming; identifier will be added on release."
+  notes: "arXiv:2605.09228"
